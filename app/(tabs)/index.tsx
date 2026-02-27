@@ -3,17 +3,14 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
-  TouchableOpacity,
+  FlatList,
   Pressable,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDashboard } from '../../lib/api/dashboard';
 import { useNotifications } from '../../lib/api/notifications';
 import { useShots } from '../../lib/api/shots';
 import { useCurrentUser } from '../../lib/api/profile';
 import { useTimer } from '../../contexts/TimerContext';
-import { DailyChecklist } from '../../components/DailyChecklist';
 import { useAdaptiveLayout } from '../../lib/adaptive-layout';
 import { BrandSpinner } from '../../components/BrandSpinner';
 import { GlassCard } from '../../components/GlassCard';
@@ -21,17 +18,14 @@ import { colors } from '../../constants/colors';
 import { router } from 'expo-router';
 import {
   Clock,
-  Calendar,
   ListTodo,
-  Play,
-  LogIn,
-  CalendarDays,
-  Focus,
-  User,
-  ArrowRight
+  Bell,
 } from 'lucide-react-native';
-import { format, addDays } from 'date-fns';
-import { ProductivityMeter } from '../../components/ProductivityMeter';
+import { format } from 'date-fns';
+import { ScreenContainer } from '../../components/ui/ScreenContainer';
+import { SectionHeader } from '../../components/ui/SectionHeader';
+import { PrimaryActionButton } from '../../components/ui/PrimaryActionButton';
+import { uiTokens } from '../../constants/ui-tokens';
 
 export default function HomeScreen() {
   const { spacing } = useAdaptiveLayout();
@@ -45,7 +39,6 @@ export default function HomeScreen() {
   const { activeTimer, setActiveTimer } = useTimer();
 
   const todayStr = format(new Date(), 'yyyy-MM-dd');
-  const tomorrowStr = format(addDays(new Date(), 1), 'yyyy-MM-dd');
 
   const todayShots = shots.filter(
     (s) => s.due_date && format(new Date(s.due_date), 'yyyy-MM-dd') === todayStr
@@ -102,366 +95,216 @@ export default function HomeScreen() {
   const firstName = user?.full_name?.split(' ')[0] || 'Artist';
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: spacing.xl * 4 }}
-      >
-        {/* Modern Header */}
-        <View style={[styles.header, { paddingHorizontal: spacing.lg, marginTop: spacing.md }]}>
-          <View>
-            <Text style={styles.greetingText}>{greeting},</Text>
-            <Text style={styles.nameText}>{firstName}</Text>
-          </View>
-          <Pressable onPress={() => router.push('/(tabs)/profile')} style={styles.avatarButton}>
-            <User color={colors.text} size={24} />
-          </Pressable>
+    <ScreenContainer>
+      <View style={[styles.header, { paddingHorizontal: spacing.lg }]}>
+        <View>
+          <Text style={styles.greetingText}>{greeting}</Text>
+          <Text style={styles.nameText}>{firstName}</Text>
         </View>
+        <Pressable
+          onPress={() => router.push('/notifications')}
+          style={styles.notificationButton}
+        >
+          <Bell color={colors.text} size={uiTokens.icon.lg} />
+          {unreadNotificationCount > 0 ? (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>
+                {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+              </Text>
+            </View>
+          ) : null}
+        </Pressable>
+      </View>
 
-        {/* Bento Grid: Top Row */}
-        <View style={[styles.bentoRow, { paddingHorizontal: spacing.lg }]}>
-          {/* Hours Card */}
-          <GlassCard style={styles.bentoCardSmall}>
-            <View style={styles.bentoContent}>
-              <View style={styles.iconCircle}>
-                <Clock size={20} color={colors.cyan} />
-              </View>
-              <Text style={styles.bentoValue}>{dashboard?.todayHours?.toFixed(1) ?? '0'}h</Text>
-              <Text style={styles.bentoLabel}>Logged Today</Text>
+      <View style={[styles.kpiRow, { paddingHorizontal: spacing.lg }]}>
+        <View style={styles.kpiCell}>
+          <Clock size={uiTokens.icon.md} color={colors.cyan} />
+          <Text style={styles.kpiValue}>{dashboard?.todayHours?.toFixed(1) ?? '0'}h</Text>
+        </View>
+        <View style={styles.kpiDivider} />
+        <View style={styles.kpiCell}>
+          <ListTodo size={uiTokens.icon.md} color={colors.purple} />
+          <Text style={styles.kpiValue}>{dashboard?.pendingCount ?? 0}</Text>
+        </View>
+      </View>
+
+      <View style={[styles.primaryActionWrap, { paddingHorizontal: spacing.lg }]}>
+        {activeTimer ? (
+          <GlassCard>
+            <View style={styles.activeTimerCard}>
+              <Text style={styles.activeLabel}>Active timer</Text>
+              <Text style={styles.activeText}>
+                {activeTimer.shotCode} · {activeTimer.taskName}
+              </Text>
+              <PrimaryActionButton
+                label="Continue in Work"
+                onPress={() => router.push('/(tabs)/work')}
+              />
             </View>
           </GlassCard>
-
-          {/* Pending Tasks Card */}
-          <GlassCard style={styles.bentoCardSmall}>
-            <View style={styles.bentoContent}>
-              <View style={[styles.iconCircle, { backgroundColor: 'rgba(167, 139, 250, 0.1)' }]}>
-                <ListTodo size={20} color={colors.purple} />
-              </View>
-              <Text style={styles.bentoValue}>{dashboard?.pendingCount ?? 0}</Text>
-              <Text style={styles.bentoLabel}>Pending Tasks</Text>
+        ) : (
+          <GlassCard>
+            <View style={styles.activeTimerCard}>
+              <Text style={styles.activeLabel}>Today</Text>
+              <Text style={styles.activeText}>Ready to start your first log?</Text>
+              <PrimaryActionButton label="Start Timer" onPress={handleStartTimer} />
             </View>
           </GlassCard>
-        </View>
+        )}
+      </View>
 
-        {/* Active Timer / Start Timer Bento */}
-        <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.md }}>
-          {activeTimer ? (
-            <Pressable onPress={() => router.push('/(tabs)/work')}>
-              <GlassCard>
-                <View style={styles.timerCard}>
-                  <View style={styles.timerHeader}>
-                    <View style={styles.pulseDot} />
-                    <Text style={styles.timerTitle}>ACTIVE TIMER</Text>
-                  </View>
-                  <Text style={styles.timerShot}>
-                    {activeTimer.shotCode} {activeTimer.taskName}
-                  </Text>
-                </View>
-              </GlassCard>
-            </Pressable>
-          ) : (
-            <Pressable onPress={handleStartTimer}>
-              <GlassCard style={styles.startTimerBorder}>
-                <View style={styles.startTimerCard}>
-                  <View style={styles.playButton}>
-                    <Play size={24} color={colors.background} fill={colors.background} />
-                  </View>
-                  <View>
-                    <Text style={styles.startTimerText}>Start Tracking</Text>
-                    <Text style={styles.startTimerSubtext}>Tap to log your first task</Text>
-                  </View>
-                </View>
-              </GlassCard>
-            </Pressable>
-          )}
-        </View>
+      <View style={[styles.sectionWrap, { paddingHorizontal: spacing.lg }]}>
+        <SectionHeader
+          title="Today's Tasks"
+          actionLabel="Open Work"
+          onActionPress={() => router.push('/(tabs)/work')}
+        />
+        <FlatList
+          data={displayTodayTasks.slice(0, 3)}
+          keyExtractor={(item) => item.id}
+          scrollEnabled={false}
+          ItemSeparatorComponent={() => <View style={{ height: uiTokens.spacing.md }} />}
+          ListEmptyComponent={
+            <GlassCard>
+              <Text style={styles.emptyText}>No urgent items for today.</Text>
+            </GlassCard>
+          }
+          renderItem={({ item }) => {
+            const label =
+              ('shot_code' in item && item.shot_code) ||
+              ('title' in item && item.title) ||
+              'Task';
+            const shotId = 'shot_id' in item ? item.shot_id : item.id;
 
-        {/* Horizontal Tasks List */}
-        <View style={{ marginTop: spacing.xl }}>
-          <View style={[styles.sectionHeader, { paddingHorizontal: spacing.lg }]}>
-            <Text style={styles.sectionTitle}>Today's Queue</Text>
-            <TouchableOpacity onPress={() => router.push('/(tabs)/work')}>
-              <Text style={styles.seeAllText}>See All</Text>
-            </TouchableOpacity>
-          </View>
-          
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: spacing.lg, paddingRight: spacing.xl }}
-            snapToInterval={220 + spacing.md}
-            decelerationRate="fast"
-          >
-            {displayTodayTasks.length === 0 ? (
-              <GlassCard style={styles.emptyTaskCard}>
-                <Text style={styles.emptyText}>You're all caught up!</Text>
-              </GlassCard>
-            ) : (
-              displayTodayTasks.map((item: { id: string; shot_code?: string; title?: string; due_date?: string; shot_id?: string }, index: number) => (
-                <Pressable
-                  key={item.id}
-                  onPress={() => {
-                    const shotId = 'shot_id' in item ? item.shot_id : item.id;
-                    if (shotId) router.push(`/shot/${shotId}`);
-                  }}
-                >
-                  <GlassCard style={[styles.taskCard, { marginLeft: index > 0 ? spacing.md : 0 }]}>
-                    <View style={styles.taskIconBg}>
-                      <ListTodo size={20} color={colors.accent} />
-                    </View>
-                    <Text style={styles.taskCode} numberOfLines={1}>
-                      {'shot_code' in item ? item.shot_code : 'title' in item ? item.title : 'Task'}
+            return (
+              <Pressable onPress={() => shotId && router.push(`/shot/${shotId}`)}>
+                <GlassCard>
+                  <View style={styles.taskItem}>
+                    <Text style={styles.taskTitle} numberOfLines={1}>
+                      {label}
                     </Text>
                     <Text style={styles.taskMeta}>
-                      {item.due_date ? `Due at ${format(new Date(item.due_date), 'h:mm a')}` : 'No deadline'}
+                      {item.due_date
+                        ? format(new Date(item.due_date), 'h:mm a')
+                        : 'No due time'}
                     </Text>
-                  </GlassCard>
-                </Pressable>
-              ))
-            )}
-          </ScrollView>
-        </View>
-
-        {/* Quick Actions Horizontal */}
-        <View style={{ marginTop: spacing.xl, paddingHorizontal: spacing.lg }}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-          <View style={styles.quickActionsContainer}>
-             <TouchableOpacity
-              style={styles.quickActionCard}
-              onPress={() => router.push('/(tabs)/work')}
-            >
-              <LogIn size={24} color={colors.text} />
-              <Text style={styles.quickActionLabel}>Log Time</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.quickActionCard}
-              onPress={() => router.push('/leaves')}
-            >
-              <CalendarDays size={24} color={colors.text} />
-              <Text style={styles.quickActionLabel}>Leave</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.quickActionCard}
-              onPress={() => router.push('/focus-timer')}
-            >
-              <Focus size={24} color={colors.text} />
-              <Text style={styles.quickActionLabel}>Focus</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Productivity & Checklist */}
-        <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
-          <Text style={styles.sectionTitle}>Checklist</Text>
-          <DailyChecklist />
-        </View>
-
-      </ScrollView>
-    </SafeAreaView>
+                  </View>
+                </GlassCard>
+              </Pressable>
+            );
+          }}
+        />
+      </View>
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scrollView: {
-    flex: 1,
-  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
+    marginTop: uiTokens.spacing.lg,
+    marginBottom: uiTokens.spacing.lg,
   },
   greetingText: {
-    fontSize: 16,
+    fontSize: uiTokens.text.bodyLg,
     color: colors.textSecondary,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   nameText: {
-    fontSize: 32,
+    fontSize: uiTokens.text.headline,
     fontWeight: '800',
     color: colors.text,
     letterSpacing: -0.5,
   },
-  avatarButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  notificationButton: {
+    width: 44,
+    height: 44,
+    borderRadius: uiTokens.radius.pill,
     backgroundColor: colors.backgroundSecondary,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderColor: colors.border,
   },
-  bentoRow: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  bentoCardSmall: {
-    flex: 1,
-  },
-  bentoContent: {
-    alignItems: 'flex-start',
-  },
-  iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0, 240, 255, 0.1)',
+  badge: {
+    position: 'absolute',
+    top: 3,
+    right: 3,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    paddingHorizontal: 3,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
-  },
-  bentoValue: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: colors.text,
-    letterSpacing: -0.5,
-  },
-  bentoLabel: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    fontWeight: '500',
-    marginTop: 4,
-  },
-  timerCard: {
-    paddingVertical: 8,
-  },
-  timerHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
-  },
-  pulseDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
     backgroundColor: colors.accent,
-    shadowColor: colors.accent,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 6,
   },
-  timerTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.accent,
-    letterSpacing: 1,
-  },
-  timerShot: {
-    fontSize: 24,
-    fontWeight: '700',
+  badgeText: {
     color: colors.text,
+    fontSize: 10,
+    fontWeight: '700',
   },
-  startTimerBorder: {
-    borderColor: colors.accent,
+  kpiRow: {
+    flexDirection: 'row',
+    backgroundColor: colors.backgroundSecondary,
+    borderRadius: uiTokens.radius.xl,
     borderWidth: 1,
-    backgroundColor: 'rgba(255, 107, 74, 0.05)',
+    borderColor: colors.border,
+    paddingVertical: uiTokens.spacing.lg,
   },
-  startTimerCard: {
-    flexDirection: 'row',
+  kpiCell: {
+    flex: 1,
     alignItems: 'center',
-    gap: 16,
-    paddingVertical: 4,
+    gap: uiTokens.spacing.xs,
   },
-  playButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.accent,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingLeft: 4, // Visual centering for play icon
-  },
-  startTimerText: {
-    fontSize: 20,
+  kpiValue: {
+    fontSize: uiTokens.text.title,
     fontWeight: '700',
     color: colors.text,
   },
-  startTimerSubtext: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginTop: 2,
+  kpiDivider: {
+    width: 1,
+    backgroundColor: colors.border,
+    marginVertical: uiTokens.spacing.sm,
   },
-  sectionHeader: {
+  primaryActionWrap: {
+    marginTop: uiTokens.spacing.lg,
+  },
+  activeTimerCard: {
+    gap: uiTokens.spacing.md,
+  },
+  activeLabel: {
+    fontSize: uiTokens.text.caption,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    color: colors.textSecondary,
+    fontWeight: '700',
+  },
+  activeText: {
+    fontSize: uiTokens.text.title,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  sectionWrap: {
+    marginTop: uiTokens.spacing.xl,
+  },
+  taskItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    marginBottom: 16,
+    alignItems: 'center',
+    gap: uiTokens.spacing.md,
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.text,
-    letterSpacing: -0.5,
-  },
-  seeAllText: {
-    fontSize: 14,
+  taskTitle: {
+    flex: 1,
+    fontSize: uiTokens.text.bodyLg,
     fontWeight: '600',
-    color: colors.cyan,
-  },
-  taskCard: {
-    width: 220,
-    height: 140,
-    justifyContent: 'space-between',
-  },
-  emptyTaskCard: {
-    width: 300,
-    height: 140,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    fontWeight: '500',
-  },
-  taskIconBg: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  taskCode: {
-    fontSize: 18,
-    fontWeight: '700',
     color: colors.text,
-    marginBottom: 4,
   },
   taskMeta: {
-    fontSize: 13,
+    fontSize: uiTokens.text.caption,
     color: colors.textSecondary,
-    fontWeight: '500',
-  },
-  quickActionsContainer: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 12,
-  },
-  quickActionCard: {
-    flex: 1,
-    backgroundColor: colors.backgroundSecondary,
-    borderRadius: 20,
-    padding: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-  },
-  quickActionLabel: {
-    fontSize: 13,
     fontWeight: '600',
-    color: colors.text,
-    marginTop: 12,
   },
   errorContainer: {
     flex: 1,
@@ -476,8 +319,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   errorText: {
-    fontSize: 14,
+    fontSize: uiTokens.text.body,
     color: colors.textSecondary,
     textAlign: 'center',
+  },
+  emptyText: {
+    fontSize: uiTokens.text.body,
+    color: colors.textSecondary,
   },
 });

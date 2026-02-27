@@ -5,7 +5,7 @@ import { colors } from '../constants/colors';
 const { width } = Dimensions.get('window');
 
 export function SplashScreen({ onFinish }: { onFinish?: () => void }) {
-  const progress = new Animated.Value(0);
+  const progress = useRef(new Animated.Value(0)).current;
   const spinValue = useRef(new Animated.Value(0)).current;
   const pulseValue = useRef(new Animated.Value(0)).current;
 

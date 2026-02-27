@@ -29,10 +29,10 @@ Manual QA steps for key flows on Android Chrome and iOS Safari.
 
 ## 2. Dashboard (Home)
 
-- [ ] Today's tasks load and display
-- [ ] Tomorrow's tasks load
-- [ ] Pending leaves shown (if any)
-- [ ] Today's hours displayed
+- [ ] Header greeting and compact status render correctly
+- [ ] Primary timer action appears as a single clear CTA
+- [ ] Today's task module shows max 3 concise items
+- [ ] Empty state is clear and uncluttered
 - [ ] Pull-to-refresh works
 - [ ] Empty states render correctly
 
@@ -42,6 +42,7 @@ Manual QA steps for key flows on Android Chrome and iOS Safari.
 
 - [ ] Timesheet list loads for date range
 - [ ] Add new time log: date, project, shot, task, hours
+- [ ] Quick hour chips (0.5/1/2/4/8) set hours input correctly
 - [ ] Submit timesheet → appears as pending
 - [ ] Validation: cannot submit 0 hours or invalid dates
 - [ ] Rate limit: 30 submissions/hr shows 429 and retry message
@@ -70,6 +71,7 @@ Manual QA steps for key flows on Android Chrome and iOS Safari.
 ## 6. Chat
 
 - [ ] Chat room list loads
+- [ ] Chat row card spacing, unread badge, and timestamp readability are consistent
 - [ ] Open room → messages load
 - [ ] Send text message
 - [ ] Messages appear in real-time (or after refresh)
@@ -120,6 +122,16 @@ Manual QA steps for key flows on Android Chrome and iOS Safari.
 - [ ] Safe area (notch, home indicator) respected
 - [ ] Keyboard dismissal works
 - [ ] Input focus scrolls view correctly
+
+---
+
+## 11. Native Feel & Motion
+
+- [ ] Tab bar feels floating and native (blur, pill shape, no clipping)
+- [ ] Tab switch feels smooth with no visible layout jump
+- [ ] Stack navigation uses right-to-left slide transitions consistently
+- [ ] App content uses full-screen space without awkward top/bottom dead zones
+- [ ] Floating timer pill is visible but not visually dominant
 
 ---
 

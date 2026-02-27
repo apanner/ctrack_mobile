@@ -5,6 +5,7 @@ import { FloatingTimerPill } from '../../components/FloatingTimerPill';
 import { useNotifications } from '../../lib/api/notifications';
 import { BlurView } from 'expo-blur';
 import { StyleSheet, Platform } from 'react-native';
+import { uiTokens } from '../../constants/ui-tokens';
 
 export default function TabsLayout() {
   const { data: notificationsData } = useNotifications();
@@ -18,11 +19,14 @@ export default function TabsLayout() {
           headerShown: false,
           tabBarActiveTintColor: colors.accent,
           tabBarInactiveTintColor: colors.textSecondary,
+          sceneStyle: {
+            backgroundColor: colors.background,
+          },
           tabBarStyle: {
             position: 'absolute',
             bottom: Platform.OS === 'ios' ? 24 : 16,
-            left: 20,
-            right: 20,
+            left: uiTokens.spacing.lg,
+            right: uiTokens.spacing.lg,
             elevation: 0,
             height: 64,
             borderRadius: 32,
@@ -33,6 +37,7 @@ export default function TabsLayout() {
             shadowOpacity: 0.3,
             shadowRadius: 20,
           },
+          tabBarHideOnKeyboard: true,
           tabBarBackground: () => (
             <BlurView 
               intensity={60} 
@@ -42,30 +47,36 @@ export default function TabsLayout() {
           ),
           tabBarShowLabel: false,
           tabBarItemStyle: {
-            paddingTop: 16,
-            paddingBottom: 16,
-          }
+            paddingTop: uiTokens.spacing.md,
+            paddingBottom: uiTokens.spacing.md,
+          },
         }}
       >
         <Tabs.Screen
           name="index"
           options={{
             title: 'Home',
-            tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
+            tabBarIcon: ({ color, focused }) => (
+              <Home size={focused ? 22 : 20} color={color} />
+            ),
           }}
         />
         <Tabs.Screen
           name="work"
           options={{
             title: 'Work',
-            tabBarIcon: ({ color, size }) => <Briefcase size={size} color={color} />,
+            tabBarIcon: ({ color, focused }) => (
+              <Briefcase size={focused ? 22 : 20} color={color} />
+            ),
           }}
         />
         <Tabs.Screen
           name="chat"
           options={{
             title: 'Chat',
-            tabBarIcon: ({ color, size }) => <MessageCircle size={size} color={color} />,
+            tabBarIcon: ({ color, focused }) => (
+              <MessageCircle size={focused ? 22 : 20} color={color} />
+            ),
             tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
           }}
         />
@@ -73,7 +84,9 @@ export default function TabsLayout() {
           name="me"
           options={{
             title: 'Me',
-            tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
+            tabBarIcon: ({ color, focused }) => (
+              <User size={focused ? 22 : 20} color={color} />
+            ),
           }}
         />
         <Tabs.Screen

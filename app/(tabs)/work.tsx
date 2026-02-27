@@ -6,10 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Pressable,
-  ActivityIndicator,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
 import { useShots } from '../../lib/api/shots';
 import { useProjects } from '../../lib/api/projects';
@@ -22,8 +19,12 @@ import { ShotTaskCard } from '../../components/ShotTaskCard';
 import { BrandSpinner } from '../../components/BrandSpinner';
 import { colors } from '../../constants/colors';
 import { router } from 'expo-router';
-import { Calendar, Clock, ChevronDown } from 'lucide-react-native';
+import { Calendar, Clock, ChevronDown, Sparkles } from 'lucide-react-native';
 import { format, addDays, subDays } from 'date-fns';
+import { ScreenContainer } from '../../components/ui/ScreenContainer';
+import { SectionHeader } from '../../components/ui/SectionHeader';
+import { PrimaryActionButton } from '../../components/ui/PrimaryActionButton';
+import { uiTokens } from '../../constants/ui-tokens';
 
 export default function WorkScreen() {
   const params = useLocalSearchParams<{ focusHours?: string; taskId?: string; shotId?: string }>();
@@ -34,6 +35,7 @@ export default function WorkScreen() {
   const [shotId, setShotId] = useState<string | null>(params.shotId ?? null);
   const [hoursInput, setHoursInput] = useState(params.focusHours ?? '');
   const [notesInput, setNotesInput] = useState('');
+  const quickHourPresets = ['0.5', '1', '2', '4', '8'];
 
   useEffect(() => {
     if (params.focusHours) {
@@ -52,7 +54,7 @@ export default function WorkScreen() {
         ? { artist_id: user?.id }
         : undefined
   );
-  const { data: timesheetsData, isLoading: timesheetsLoading } = useTimesheets(
+  const { data: timesheetsData } = useTimesheets(
     selectedDate,
     selectedDate
   );
@@ -92,14 +94,14 @@ export default function WorkScreen() {
 
   if (shotsLoading && segment === 'Tasks') {
     return (
-      <SafeAreaView style={styles.container}>
+      <ScreenContainer>
         <BrandSpinner fullScreen size="large" />
-      </SafeAreaView>
+      </ScreenContainer>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <ScreenContainer>
       <View style={[styles.header, { paddingHorizontal: spacing.lg }]}>
         <Text style={styles.headerTitle}>Work</Text>
       </View>
@@ -114,10 +116,26 @@ export default function WorkScreen() {
         <ScrollView
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: spacing.xxl * 2 }}
+          contentContainerStyle={{ paddingBottom: spacing.xxl * 4 }}
         >
           <View style={[styles.section, { paddingHorizontal: spacing.lg }]}>
-            <Text style={styles.sectionLabel}>Date</Text>
+            <GlassCard>
+              <View style={styles.heroWrap}>
+                <View style={styles.heroIcon}>
+                  <Sparkles size={uiTokens.icon.md} color={colors.cyan} />
+                </View>
+                <View style={styles.heroTextWrap}>
+                  <Text style={styles.heroTitle}>Quick Log</Text>
+                  <Text style={styles.heroSubtitle}>
+                    Pick project, shot, and hours in under a minute.
+                  </Text>
+                </View>
+              </View>
+            </GlassCard>
+          </View>
+
+          <View style={[styles.section, { paddingHorizontal: spacing.lg }]}>
+            <SectionHeader title="1. Select Date" />
             <View style={styles.daySelector}>
               <TouchableOpacity
                 onPress={() => setSelectedDate(format(subDays(selectedDateObj, 1), 'yyyy-MM-dd'))}
@@ -139,7 +157,7 @@ export default function WorkScreen() {
           </View>
 
           <View style={[styles.section, { paddingHorizontal: spacing.lg }]}>
-            <Text style={styles.sectionLabel}>Project</Text>
+            <SectionHeader title="2. Choose Project" />
             <View style={styles.picker}>
               <Text style={styles.pickerText}>
                 {projectId
@@ -173,7 +191,7 @@ export default function WorkScreen() {
           </View>
 
           <View style={[styles.section, { paddingHorizontal: spacing.lg }]}>
-            <Text style={styles.sectionLabel}>Shot / Task</Text>
+            <SectionHeader title="3. Select Shot (Optional)" />
             <View style={styles.picker}>
               <Text style={styles.pickerText}>
                 {shotId
@@ -204,7 +222,7 @@ export default function WorkScreen() {
           </View>
 
           <View style={[styles.section, { paddingHorizontal: spacing.lg }]}>
-            <Text style={styles.sectionLabel}>Hours</Text>
+            <SectionHeader title="4. Add Hours" />
             <View style={styles.hoursRow}>
               <Clock size={20} color={colors.textSecondary} />
               <TextInput
@@ -216,10 +234,27 @@ export default function WorkScreen() {
                 onChangeText={setHoursInput}
               />
             </View>
+            <View style={styles.presetRow}>
+              {quickHourPresets.map((value) => {
+                const isActive = hoursInput === value;
+                return (
+                  <TouchableOpacity
+                    key={value}
+                    style={[styles.presetChip, isActive && styles.presetChipActive]}
+                    onPress={() => setHoursInput(value)}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={[styles.presetChipText, isActive && styles.presetChipTextActive]}>
+                      {value}h
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
 
           <View style={[styles.section, { paddingHorizontal: spacing.lg }]}>
-            <Text style={styles.sectionLabel}>Notes (optional)</Text>
+            <SectionHeader title="5. Notes (Optional)" />
             <TextInput
               style={styles.notesInput}
               placeholder="Add notes..."
@@ -231,24 +266,12 @@ export default function WorkScreen() {
           </View>
 
           <View style={[styles.section, { paddingHorizontal: spacing.lg }]}>
-            <Pressable
-              style={[
-                styles.saveBtn,
-                (!hoursInput || parseFloat(hoursInput) <= 0) && styles.saveBtnDisabled,
-              ]}
+            <PrimaryActionButton
+              label="Save Time Entry"
               onPress={handleSaveTimesheet}
-              disabled={
-                !hoursInput ||
-                parseFloat(hoursInput) <= 0 ||
-                createTimeLog.isPending
-              }
-            >
-              {createTimeLog.isPending ? (
-                <ActivityIndicator color="#FFF" size="small" />
-              ) : (
-                <Text style={styles.saveBtnText}>Save / Submit</Text>
-              )}
-            </Pressable>
+              disabled={!hoursInput || parseFloat(hoursInput) <= 0}
+              loading={createTimeLog.isPending}
+            />
           </View>
 
           {timesheetsData?.data && timesheetsData.data.length > 0 && (
@@ -310,7 +333,7 @@ export default function WorkScreen() {
           </View>
         </ScrollView>
       )}
-    </SafeAreaView>
+    </ScreenContainer>
   );
 }
 
@@ -335,11 +358,37 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   sectionLabel: {
-    fontSize: 12,
+    fontSize: uiTokens.text.caption,
     fontWeight: '600',
     color: colors.textSecondary,
-    marginBottom: 8,
+    marginBottom: uiTokens.spacing.sm,
     textTransform: 'uppercase',
+  },
+  heroWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: uiTokens.spacing.md,
+  },
+  heroIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: uiTokens.radius.md,
+    backgroundColor: 'rgba(0,240,255,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroTextWrap: {
+    flex: 1,
+  },
+  heroTitle: {
+    fontSize: uiTokens.text.bodyLg,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  heroSubtitle: {
+    fontSize: uiTokens.text.body,
+    color: colors.textSecondary,
+    marginTop: 2,
   },
   daySelector: {
     flexDirection: 'row',
@@ -424,6 +473,32 @@ const styles = StyleSheet.create({
     color: colors.text,
     paddingVertical: 14,
   },
+  presetRow: {
+    flexDirection: 'row',
+    marginTop: uiTokens.spacing.md,
+    gap: uiTokens.spacing.sm,
+    flexWrap: 'wrap',
+  },
+  presetChip: {
+    paddingHorizontal: uiTokens.spacing.md,
+    paddingVertical: uiTokens.spacing.sm,
+    borderRadius: uiTokens.radius.pill,
+    backgroundColor: colors.backgroundTertiary,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  presetChipActive: {
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
+  },
+  presetChipText: {
+    color: colors.textSecondary,
+    fontSize: uiTokens.text.body,
+    fontWeight: '600',
+  },
+  presetChipTextActive: {
+    color: colors.text,
+  },
   notesInput: {
     backgroundColor: colors.backgroundSecondary,
     borderRadius: 12,
@@ -434,20 +509,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     minHeight: 80,
-  },
-  saveBtn: {
-    backgroundColor: colors.accent,
-    borderRadius: 16,
-    paddingVertical: 18,
-    alignItems: 'center',
-  },
-  saveBtnDisabled: {
-    opacity: 0.5,
-  },
-  saveBtnText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#FFF',
   },
   logRow: {
     flexDirection: 'row',

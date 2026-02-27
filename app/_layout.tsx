@@ -17,6 +17,7 @@ import { PushTokenRegistration } from '../lib/push-token-registration';
 import { LocationTrackingManager } from '../lib/location-tracking-manager';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { validateEnv } from '../lib/env-validation';
+import { colors } from '../constants/colors';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -101,23 +102,23 @@ export default function RootLayout() {
             <Stack
               screenOptions={{
                 headerStyle: {
-                  backgroundColor: '#09090B',
+                  backgroundColor: colors.background,
                 },
-                headerTintColor: '#FAFAFA',
+                headerTintColor: colors.text,
                 headerTitleStyle: {
                   fontWeight: '700',
                   fontSize: 18,
                 },
                 headerShadowVisible: false,
                 animation: 'slide_from_right',
+                animationDuration: 220,
+                contentStyle: {
+                  backgroundColor: colors.background,
+                },
               }}
             >
-                  <Stack.Screen
-                name="(auth)"
-                options={{ headerShown: false }}
-              />
               <Stack.Screen
-                name="auth/callback"
+                name="(auth)"
                 options={{ headerShown: false }}
               />
               <Stack.Screen

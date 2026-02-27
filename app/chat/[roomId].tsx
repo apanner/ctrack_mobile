@@ -23,6 +23,8 @@ import { ChatBubble } from '../../components/ChatBubble';
 import { ChatInput } from '../../components/ChatInput';
 import { colors } from '../../constants/colors';
 import { supabase } from '../../lib/supabase';
+import { GlassCard } from '../../components/GlassCard';
+import { uiTokens } from '../../constants/ui-tokens';
 
 export default function ChatRoomScreen() {
   const { roomId } = useLocalSearchParams<{ roomId: string }>();
@@ -139,9 +141,13 @@ export default function ChatRoomScreen() {
         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
           <ChevronLeft size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          {room.name}
-        </Text>
+        <GlassCard style={styles.headerCard} noPadding>
+          <View style={styles.headerCardInner}>
+            <Text style={styles.headerTitle} numberOfLines={1}>
+              {room.name}
+            </Text>
+          </View>
+        </GlassCard>
       </View>
 
       <KeyboardAvoidingView
@@ -194,20 +200,29 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.background,
+    paddingHorizontal: uiTokens.spacing.md,
+    paddingVertical: uiTokens.spacing.sm,
+    backgroundColor: colors.backgroundSecondary,
   },
   backButton: {
-    padding: 8,
+    width: 42,
+    height: 42,
+    borderRadius: uiTokens.radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background,
     marginRight: 8,
   },
-  headerTitle: {
+  headerCard: {
     flex: 1,
-    fontSize: 18,
-    fontWeight: '600',
+  },
+  headerCardInner: {
+    paddingHorizontal: uiTokens.spacing.md,
+    paddingVertical: uiTokens.spacing.sm,
+  },
+  headerTitle: {
+    fontSize: uiTokens.text.bodyLg,
+    fontWeight: '700',
     color: colors.text,
   },
   keyboardView: {
@@ -219,7 +234,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   listContent: {
-    padding: 16,
+    padding: uiTokens.spacing.md,
     paddingBottom: 32,
   },
   messageWrapper: {

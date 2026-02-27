@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { colors } from '../constants/colors';
+import { uiTokens } from '../constants/ui-tokens';
 
 interface GlassCardProps {
   children: React.ReactNode;
@@ -24,25 +25,25 @@ export function GlassCard({ children, style, intensity = 40, noPadding = false }
 
 const styles = StyleSheet.create({
   wrapper: {
-    borderRadius: 24, // Modern Bento rounded corners
+    borderRadius: uiTokens.radius.xl,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: 'rgba(24, 24, 27, 0.4)', // Soft Zinc-900 with transparency
+    borderColor: uiTokens.surface.glassBorder,
+    backgroundColor: uiTokens.surface.glassBackground,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
+    shadowOpacity: uiTokens.surface.elevatedShadowOpacity,
+    shadowRadius: uiTokens.surface.elevatedShadowRadius,
     elevation: 5,
   },
   blur: {
     flex: 1,
   },
   content: {
-    padding: 20, // Generous padding for modern feel
+    padding: uiTokens.spacing.xl,
     flex: 1,
   },
   noPadding: {
     padding: 0,
-  }
+  },
 });

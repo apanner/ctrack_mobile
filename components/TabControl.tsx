@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors } from '../constants/colors';
+import { uiTokens } from '../constants/ui-tokens';
 
 interface TabControlProps {
   tabs: string[];
@@ -33,28 +34,29 @@ export function TabControl({ tabs, activeTab, onTabChange }: TabControlProps) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    marginBottom: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    paddingHorizontal: uiTokens.spacing.xl,
+    marginBottom: uiTokens.spacing.xl,
+    backgroundColor: colors.backgroundSecondary,
+    borderRadius: uiTokens.radius.pill,
+    marginHorizontal: uiTokens.spacing.lg,
+    paddingVertical: uiTokens.spacing.xs,
   },
   tab: {
     flex: 1,
-    paddingVertical: 16,
+    paddingVertical: uiTokens.spacing.md,
     alignItems: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
+    borderRadius: uiTokens.radius.pill,
   },
   activeTab: {
-    borderBottomColor: colors.accent, // Orange underline
+    backgroundColor: 'rgba(255,255,255,0.08)',
   },
   tabText: {
-    fontSize: 16,
+    fontSize: uiTokens.text.bodyLg,
     fontWeight: '500',
     color: colors.textSecondary,
   },
   activeTabText: {
-    color: '#FFF',
-    fontWeight: '600',
+    color: colors.text,
+    fontWeight: '700',
   },
 });
