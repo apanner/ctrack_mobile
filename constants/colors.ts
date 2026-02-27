@@ -2,16 +2,16 @@
 // Dark theme with gradient accents
 
 export const colors = {
-  // Backgrounds
-  background: '#1C1E26',
-  backgroundSecondary: '#2A2D35',
-  backgroundTertiary: '#34373F',
+  // Backgrounds (OLED friendly & sleek dark slate)
+  background: '#09090B', // Zinc-950
+  backgroundSecondary: '#18181B', // Zinc-900
+  backgroundTertiary: '#27272A', // Zinc-800
   
-  // Accents
-  accent: '#FF8A65',
-  accentSecondary: '#FFB74D',
+  // Accents (Punchy, modern neon)
+  accent: '#FF6B4A', // Punchy coral/orange
+  accentSecondary: '#FDBA74',
   purple: '#A78BFA',
-  cyan: '#67E8F9',
+  cyan: '#00F0FF',
   
   // Status
   success: '#10B981',
@@ -19,12 +19,12 @@ export const colors = {
   error: '#EF4444',
   
   // Text
-  text: '#FFFFFF',
-  textSecondary: '#A0A0A0',
-  textTertiary: '#6B6B6B',
+  text: '#FAFAFA', // Zinc-50
+  textSecondary: '#A1A1AA', // Zinc-400
+  textTertiary: '#71717A', // Zinc-500
   
   // Borders
-  border: '#3A3D45',
-  borderLight: '#4A4D55',
+  border: 'rgba(255,255,255,0.08)',
+  borderLight: 'rgba(255,255,255,0.15)',
 } as const;
 

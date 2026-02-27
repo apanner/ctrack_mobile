@@ -101,16 +101,23 @@ export default function RootLayout() {
             <Stack
               screenOptions={{
                 headerStyle: {
-                  backgroundColor: '#2A2D35',
+                  backgroundColor: '#09090B',
                 },
-                headerTintColor: '#FFFFFF',
+                headerTintColor: '#FAFAFA',
                 headerTitleStyle: {
-                  fontWeight: '600',
+                  fontWeight: '700',
+                  fontSize: 18,
                 },
+                headerShadowVisible: false,
+                animation: 'slide_from_right',
               }}
             >
                   <Stack.Screen
                 name="(auth)"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="auth/callback"
                 options={{ headerShown: false }}
               />
               <Stack.Screen

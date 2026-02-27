@@ -3,6 +3,8 @@ import { colors } from '../../constants/colors';
 import { Home, Briefcase, MessageCircle, User } from 'lucide-react-native';
 import { FloatingTimerPill } from '../../components/FloatingTimerPill';
 import { useNotifications } from '../../lib/api/notifications';
+import { BlurView } from 'expo-blur';
+import { StyleSheet, Platform } from 'react-native';
 
 export default function TabsLayout() {
   const { data: notificationsData } = useNotifications();
@@ -17,17 +19,32 @@ export default function TabsLayout() {
           tabBarActiveTintColor: colors.accent,
           tabBarInactiveTintColor: colors.textSecondary,
           tabBarStyle: {
-            backgroundColor: colors.backgroundSecondary,
-            borderTopColor: colors.border,
-            borderTopWidth: 1,
-            height: 60,
-            paddingBottom: 8,
-            paddingTop: 8,
+            position: 'absolute',
+            bottom: Platform.OS === 'ios' ? 24 : 16,
+            left: 20,
+            right: 20,
+            elevation: 0,
+            height: 64,
+            borderRadius: 32,
+            borderTopWidth: 0,
+            backgroundColor: 'transparent',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 10 },
+            shadowOpacity: 0.3,
+            shadowRadius: 20,
           },
-          tabBarLabelStyle: {
-            fontSize: 12,
-            fontWeight: '500',
-          },
+          tabBarBackground: () => (
+            <BlurView 
+              intensity={60} 
+              tint="dark" 
+              style={[StyleSheet.absoluteFill, { borderRadius: 32, overflow: 'hidden', backgroundColor: 'rgba(24,24,27,0.6)' }]} 
+            />
+          ),
+          tabBarShowLabel: false,
+          tabBarItemStyle: {
+            paddingTop: 16,
+            paddingBottom: 16,
+          }
         }}
       >
         <Tabs.Screen

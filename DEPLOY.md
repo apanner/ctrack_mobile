@@ -5,9 +5,9 @@
 - **Production:** https://ctrackmobile.vercel.app
 - **Build:** Expo web export → `dist/` → Vercel static hosting
 - **Env vars:** Set in [Vercel Dashboard](https://vercel.com/apanners-projects/ctrack_mobile/settings/environment-variables):
-  - `EXPO_PUBLIC_API_URL`
-  - `EXPO_PUBLIC_SUPABASE_URL`
-  - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
+- `EXPO_PUBLIC_API_URL`
+- `EXPO_PUBLIC_SUPABASE_URL` — same as ctrack_v0: `https://czwfeqheduofviockrab.supabase.co`
+- `EXPO_PUBLIC_SUPABASE_ANON_KEY` — anon key from the same Supabase project
 
 ## Push to GitHub
 

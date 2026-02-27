@@ -37,8 +37,8 @@
     "plugins": ["expo-router", "expo-notifications", ["expo-image-picker", {"photosPermission": "Allow CTrack to access your photos to share images in chat."}], ["expo-audio", {"microphonePermission": "Allow CTrack to access your microphone to record voice messages."}],
       ["expo-location", {"locationWhenInUsePermission": "Allow CTrack to use your location for shift GPS tracking. Supervisors can see your position during work hours."}]],
     "extra": {
-      "supabaseUrl": "https://zkuubxwhpnvogtoxxxib.supabase.co",
-      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InprdXVieHdocG52b2d0b3h4eGliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MzYwMjcsImV4cCI6MjA3ODQxMjAyN30.TwiZ7vgEFrf7kosNuYexBCC9cE2hnD7RwDAWenMLqVI",
+      "supabaseUrl": "https://czwfeqheduofviockrab.supabase.co",
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6d2ZlcWhlZHVvZnZpb2NrcmFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3MTAzMDEsImV4cCI6MjA4NDI4NjMwMX0.BgP1i1X_6mvthGC-gJCbxK1dcoYCjsHyar_5aUfYI1s",
       "router": {},
       "eas": {
         "projectId": "4a938b03-0d60-4361-a6b6-3fae00ed6c10"

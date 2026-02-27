@@ -1,28 +1,106 @@
-import React from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet, Animated, Easing, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Clapperboard } from 'lucide-react-native';
 import { colors } from '../constants/colors';
 
 interface BrandSpinnerProps {
-  size?: 'small' | 'large';
+  size?: 'small' | 'large' | 'huge';
   fullScreen?: boolean;
 }
 
 export function BrandSpinner({ size = 'large', fullScreen = false }: BrandSpinnerProps) {
+  const spinValue = useRef(new Animated.Value(0)).current;
+  const pulseValue = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Continuous rotation
+    Animated.loop(
+      Animated.timing(spinValue, {
+        toValue: 1,
+        duration: 1500,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+
+    // Subtle pulse
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseValue, {
+          toValue: 1,
+          duration: 1000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseValue, {
+          toValue: 0,
+          duration: 1000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        })
+      ])
+    ).start();
+  }, []);
+
+  const spin = spinValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg']
+  });
+
+  const reverseSpin = spinValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['360deg', '0deg']
+  });
+
+  const scale = pulseValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.95, 1.05]
+  });
+
+  const opacity = pulseValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.6, 1]
+  });
+
+  const sizeMap = {
+    small: 32,
+    large: 64,
+    huge: 120
+  };
+
+  const containerSize = sizeMap[size];
+  const ringSize = containerSize;
+  const innerRingSize = containerSize * 0.7;
+
   const spinner = (
-    <View style={styles.centerContent}>
-      <View style={styles.iconWrapper}>
-        <LinearGradient
-          colors={[colors.cyan, colors.purple]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.iconGradient}
-        >
-          <Clapperboard size={size === 'large' ? 32 : 24} color="#FFF" />
-        </LinearGradient>
-      </View>
-      <ActivityIndicator size={size} color={colors.accent} style={styles.spinner} />
+    <View style={[styles.centerContent, { width: containerSize, height: containerSize }]}>
+      {/* Background Glow */}
+      <Animated.View 
+        style={[
+          styles.glow, 
+          { 
+            width: containerSize * 1.5, 
+            height: containerSize * 1.5,
+            opacity: opacity,
+            transform: [{ scale }]
+          }
+        ]} 
+      />
+
+      {/* Outer spinning gradient ring */}
+      <Animated.View style={[styles.ringContainer, { width: ringSize, height: ringSize, transform: [{ rotate: spin }] }]}>
+        <View style={[styles.ring, { width: ringSize, height: ringSize, borderRadius: ringSize / 2, borderTopColor: colors.cyan }]} />
+      </Animated.View>
+
+      {/* Inner reverse spinning ring */}
+      <Animated.View style={[styles.ringContainer, { width: innerRingSize, height: innerRingSize, transform: [{ rotate: reverseSpin }] }]}>
+        <View style={[styles.ring, { width: innerRingSize, height: innerRingSize, borderRadius: innerRingSize / 2, borderBottomColor: '#24E1B1', borderLeftColor: '#24E1B1', opacity: 0.8 }]} />
+      </Animated.View>
+
+      {/* Center 'C' */}
+      <Animated.Text style={[styles.centerLetter, { fontSize: containerSize * 0.4, transform: [{ scale }] }]}>
+        C
+      </Animated.Text>
     </View>
   );
 
@@ -37,19 +115,35 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: colors.background,
   },
   centerContent: {
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconWrapper: {
-    marginBottom: 16,
+  glow: {
+    position: 'absolute',
+    borderRadius: 999,
+    backgroundColor: colors.cyan,
+    opacity: 0.15,
+    filter: [{ blur: '20px' }] as any, // Works on web
   },
-  iconGradient: {
-    padding: 12,
-    borderRadius: 16,
+  ringContainer: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  spinner: {
-    marginTop: 8,
+  ring: {
+    borderWidth: 3,
+    borderColor: 'transparent',
+    position: 'absolute',
   },
+  centerLetter: {
+    position: 'absolute',
+    fontWeight: '900',
+    color: colors.cyan,
+    textShadowColor: 'rgba(0, 240, 255, 0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
+  }
 });

@@ -1,22 +1,51 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Clapperboard } from 'lucide-react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Animated, Dimensions, Easing } from 'react-native';
 import { colors } from '../constants/colors';
 
 const { width } = Dimensions.get('window');
 
 export function SplashScreen({ onFinish }: { onFinish?: () => void }) {
   const progress = new Animated.Value(0);
+  const spinValue = useRef(new Animated.Value(0)).current;
+  const pulseValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    // Progress bar animation
     Animated.timing(progress, {
       toValue: 1,
-      duration: 2000, // 2 seconds loading
+      duration: 2000,
       useNativeDriver: false,
     }).start(() => {
       if (onFinish) onFinish();
     });
+
+    // Continuous rotation
+    Animated.loop(
+      Animated.timing(spinValue, {
+        toValue: 1,
+        duration: 1500,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+
+    // Subtle pulse
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseValue, {
+          toValue: 1,
+          duration: 1000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseValue, {
+          toValue: 0,
+          duration: 1000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        })
+      ])
+    ).start();
   }, []);
 
   const widthInterpolated = progress.interpolate({
@@ -24,23 +53,63 @@ export function SplashScreen({ onFinish }: { onFinish?: () => void }) {
     outputRange: ['0%', '100%'],
   });
 
+  const spin = spinValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg']
+  });
+
+  const reverseSpin = spinValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['360deg', '0deg']
+  });
+
+  const scale = pulseValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.95, 1.05]
+  });
+
+  const opacity = pulseValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.6, 1]
+  });
+
+  const containerSize = 120;
+  const ringSize = containerSize;
+  const innerRingSize = containerSize * 0.7;
+
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={['#2A2D35', '#1C1E26']}
-        style={StyleSheet.absoluteFill}
-      />
-      
       <View style={styles.content}>
-        <View style={styles.iconContainer}>
-          <LinearGradient
-            colors={[colors.cyan, colors.purple]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.iconGradient}
-          >
-            <Clapperboard size={64} color="#FFF" />
-          </LinearGradient>
+        
+        {/* Animated CTrack Spinner */}
+        <View style={[styles.centerContent, { width: containerSize, height: containerSize, marginBottom: 40 }]}>
+          {/* Background Glow */}
+          <Animated.View 
+            style={[
+              styles.glow, 
+              { 
+                width: containerSize * 1.5, 
+                height: containerSize * 1.5,
+                opacity: opacity,
+                transform: [{ scale }]
+              }
+            ]} 
+          />
+
+          {/* Outer spinning gradient ring */}
+          <Animated.View style={[styles.ringContainer, { width: ringSize, height: ringSize, transform: [{ rotate: spin }] }]}>
+            <View style={[styles.ring, { width: ringSize, height: ringSize, borderRadius: ringSize / 2, borderTopColor: colors.cyan }]} />
+          </Animated.View>
+
+          {/* Inner reverse spinning ring */}
+          <Animated.View style={[styles.ringContainer, { width: innerRingSize, height: innerRingSize, transform: [{ rotate: reverseSpin }] }]}>
+            <View style={[styles.ring, { width: innerRingSize, height: innerRingSize, borderRadius: innerRingSize / 2, borderBottomColor: '#24E1B1', borderLeftColor: '#24E1B1', opacity: 0.8 }]} />
+          </Animated.View>
+
+          {/* Center 'C' */}
+          <Animated.Text style={[styles.centerLetter, { fontSize: containerSize * 0.4, transform: [{ scale }] }]}>
+            C
+          </Animated.Text>
         </View>
         
         <Text style={styles.title}>CineTrack</Text>
@@ -54,7 +123,7 @@ export function SplashScreen({ onFinish }: { onFinish?: () => void }) {
               ]} 
             />
           </View>
-          <Text style={styles.loadingText}>LOADING...</Text>
+          <Text style={styles.loadingText}>INITIALIZING...</Text>
         </View>
       </View>
     </View>
@@ -72,24 +141,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
   },
-  iconContainer: {
-    marginBottom: 24,
-    shadowColor: colors.cyan,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 20,
-    elevation: 10,
-  },
-  iconGradient: {
-    padding: 20,
-    borderRadius: 24,
-  },
   title: {
     fontSize: 42,
-    fontWeight: '700',
-    color: '#FFF',
+    fontWeight: '800',
+    color: colors.text,
     marginBottom: 60,
-    letterSpacing: 1,
+    letterSpacing: -1,
   },
   loaderContainer: {
     width: width * 0.6,
@@ -98,7 +155,7 @@ const styles = StyleSheet.create({
   loaderTrack: {
     width: '100%',
     height: 4,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: colors.border,
     borderRadius: 2,
     marginBottom: 12,
     overflow: 'hidden',
@@ -112,6 +169,35 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 12,
     letterSpacing: 2,
+    fontWeight: '600',
   },
+  centerContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  glow: {
+    position: 'absolute',
+    borderRadius: 999,
+    backgroundColor: colors.cyan,
+    filter: [{ blur: '30px' }] as any,
+  },
+  ringContainer: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ring: {
+    borderWidth: 4,
+    borderColor: 'transparent',
+    position: 'absolute',
+  },
+  centerLetter: {
+    position: 'absolute',
+    fontWeight: '900',
+    color: colors.cyan,
+    textShadowColor: 'rgba(0, 240, 255, 0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
+  }
 });
 
