@@ -1,0 +1,27 @@
+node_modules/
+.expo/
+dist/
+npm-debug.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+
+# Build artifacts (keep folder structure, ignore build files)
+builds/**/*
+!builds/.gitkeep
+
+# macOS
+.DS_Store
+
+# Environment
+.env.local
+.env
+.env*.local
+
+# Vercel
+.vercel
+

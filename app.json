@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "CTrack Artist Manager",
+    "slug": "cinetrack-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0A0F"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.rork.cinetrack-mobile"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0A0A0F"
+      },
+      "package": "app.rork.cinetrack_mobile"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "name": "CTrack Artist Manager",
+      "shortName": "CTrack",
+      "themeColor": "#0A0A0F",
+      "backgroundColor": "#0A0A0F",
+      "display": "standalone",
+      "orientation": "portrait"
+    },
+    "scheme": "cinetrack",
+    "plugins": ["expo-router", "expo-notifications", ["expo-image-picker", {"photosPermission": "Allow CTrack to access your photos to share images in chat."}], ["expo-audio", {"microphonePermission": "Allow CTrack to access your microphone to record voice messages."}],
+      ["expo-location", {"locationWhenInUsePermission": "Allow CTrack to use your location for shift GPS tracking. Supervisors can see your position during work hours."}]],
+    "extra": {
+      "supabaseUrl": "https://zkuubxwhpnvogtoxxxib.supabase.co",
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InprdXVieHdocG52b2d0b3h4eGliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MzYwMjcsImV4cCI6MjA3ODQxMjAyN30.TwiZ7vgEFrf7kosNuYexBCC9cE2hnD7RwDAWenMLqVI",
+      "router": {},
+      "eas": {
+        "projectId": "4a938b03-0d60-4361-a6b6-3fae00ed6c10"
+      }
+    },
+    "owner": "apanner"
+  }
+}

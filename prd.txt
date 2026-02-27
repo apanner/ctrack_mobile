@@ -1,0 +1,819 @@
+# CineTrack Mobile - Complete Project Summary
+
+## Project Overview
+**CineTrack Mobile** is a VFX (Visual Effects) task management and collaboration mobile application built with React Native and Expo. It provides a beautiful, minimal, iPhone-style UI for VFX artists and managers to manage tasks, communicate via chat, track project progress, and collaborate on shots.
+
+**Version**: 2.1  
+**Project ID**: t9kmsnmkfkaapqhxunjap  
+**Expo SDK**: 54.0.0  
+**Bundle Identifier (iOS)**: app.rork.cinetrack-chat-mobile  
+**Package Name (Android)**: app.rork.cinetrack_chat_mobile
+
+---
+
+## Design Philosophy
+
+### Visual Style
+- **Minimal, clean iPhone-native aesthetics**
+- **Dark theme with gradient accents**
+- **Soft glowing effects** (particularly on empty states)
+- **Rounded, bubble-based UI elements**
+- **Custom robot illustrations** for empty states
+- **Smooth animations and transitions**
+
+### Color Palette
+The app uses a carefully crafted dark color scheme:
+
+| Color | Hex | Usage |
+|-------|-----|-------|
+| Background | #1C1E26 | Main background |
+| Background Secondary | #2A2D35 | Cards, tab bar |
+| Background Tertiary | #34373F | Input fields, progress bars |
+| Accent | #FF8A65 | Primary CTA, buttons |
+| Accent Secondary | #FFB74D | Gradient end |
+| Purple | #A78BFA | Status badges, messages |
+| Cyan | #67E8F9 | Shot codes, progress |
+| Success | #10B981 | Completed status |
+| Warning | #F59E0B | Assigned status |
+| Error | #EF4444 | High priority, unread badges |
+
+---
+
+## Architecture
+
+### Tech Stack
+- **Framework**: React Native 0.81.5
+- **Runtime**: Expo 54.0.20
+- **Language**: TypeScript 5.9.2
+- **Navigation**: Expo Router 6.0.13 (file-based routing)
+- **State Management**: 
+  - `@nkzw/create-context-hook` for global state
+  - `@tanstack/react-query` for server state (ready for backend)
+  - `zustand` (installed but not currently used)
+- **Storage**: AsyncStorage for user persistence
+- **Styling**: React Native StyleSheet API
+- **UI Libraries**:
+  - `expo-linear-gradient` for gradients
+  - `lucide-react-native` for icons
+  - `expo-image` for optimized images
+  - `expo-blur` for blur effects
+
+### Project Structure
+```
+cinetrack-mobile/
+├── app/                          # Expo Router file-based routing
+│   ├── _layout.tsx              # Root layout with providers
+│   ├── +not-found.tsx           # 404 screen
+│   ├── (tabs)/                  # Tab navigation group
+│   │   ├── _layout.tsx          # Tab bar configuration (4 tabs)
+│   │   ├── index.tsx            # Dashboard (default route)
+│   │   ├── projects.tsx         # Projects list
+│   │   ├── chat.tsx             # Chat list
+│   │   └── profile.tsx          # User profile
+│   ├── task/[id].tsx            # Task detail screen (dynamic route)
+│   ├── chat/[id].tsx            # Chat conversation screen (dynamic route)
+│   ├── project/[id].tsx         # Project detail screen (stub)
+│   └── shot/[id].tsx            # Shot detail screen (stub)
+├── components/                   # Reusable UI components
+│   ├── GradientButton.tsx       # Button with gradient/outline variants
+│   └── Badge.tsx                # Notification badge component
+├── constants/                    # App-wide constants
+│   └── colors.ts                # Centralized color definitions
+├── context/                      # React Context providers
+│   └── AppContext.tsx           # Global app state using create-context-hook
+├── mocks/                        # Mock data for development
+│   └── data.ts                  # Users, tasks, chats, projects, shots
+├── types/                        # TypeScript type definitions
+│   └── index.ts                 # All interface/type exports
+└── assets/                       # Static assets (images, icons)
+```
+
+---
+
+## Core Features
+
+### 1. User Roles
+The app supports two distinct user roles with different permissions:
+
+#### Artist Role
+- View assigned tasks
+- Update task status (assigned → in-progress → review)
+- Upload work-in-progress (WIP)
+- Task-level chat
+- Direct messaging with managers
+- View limited project/shot information
+- Receive push notifications
+
+#### Manager Role
+- All Artist permissions, plus:
+- View all tasks across all projects
+- Assign tasks to artists
+- Create new tasks
+- Approve/review work
+- Shot-level chat
+- Broadcast messages to team
+- Full project and shot visibility
+- Team management
+
+### 2. Navigation Structure
+
+#### Bottom Tab Bar (4 Tabs)
+```
+Dashboard | Projects | Chat | Profile
+```
+
+- **Dashboard**: Task list with segmented control (Assigned/Completed)
+- **Projects**: List of active projects with progress tracking
+- **Chat**: Organized chat list (Pinned, Unread, DMs, Task Chats)
+- **Profile**: User info, role switcher, app info
+
+### 3. Task Management
+
+#### Task Statuses
+1. **Assigned** (yellow/warning)
+2. **In Progress** (cyan)
+3. **Review** (purple)
+4. **Completed** (green)
+
+#### Task Priority Levels
+- **Low**: Gray indicator
+- **Medium**: Yellow/warning indicator
+- **High**: Red/error indicator
+
+#### Task Features
+- Shot code tagging
+- Due date tracking
+- Description and metadata
+- Unread message count
+- Status update workflow
+- Integrated task chat
+
+### 4. Chat System
+
+#### Chat Types
+1. **Direct Messages (DM)**
+   - One-on-one conversations
+   - Artist ↔ Manager
+   - Artist ↔ Artist
+
+2. **Task-Level Chat**
+   - Linked to specific tasks
+   - Automatic context tagging
+   - WIP discussion
+   - Preview in task detail
+
+3. **Shot-Level Chat** (Manager only)
+   - Team collaboration per shot
+   - Multiple participants
+   - Project-scoped
+
+#### Chat Features
+- iMessage-style bubble UI
+- Avatar display
+- Timestamp formatting
+- Unread count badges
+- Message sections (Pinned, Unread, DMs, Task Chats)
+- Typing in text input
+- Send button with icon
+- Keyboard avoidance
+- Auto-scroll to latest
+
+### 5. Projects & Shots
+
+#### Project Features
+- Thumbnail images
+- Progress tracking (completed/total shots)
+- Deadline display
+- Progress bar with percentage
+- List view with cards
+
+#### Shot Features
+- Unique shot codes (e.g., "NR_010")
+- Associated project linking
+- Task count tracking
+- Thumbnail preview
+- Deadline information
+
+---
+
+## Data Models
+
+### User
+```typescript
+interface User {
+  id: string;
+  name: string;
+  role: "artist" | "manager";
+  avatar: string;  // URL to avatar image
+  email: string;
+}
+```
+
+### Task
+```typescript
+interface Task {
+  id: string;
+  shotId: string;
+  projectId: string;
+  shotCode: string;  // e.g., "NR_010"
+  title: string;
+  description: string;
+  status: "assigned" | "in-progress" | "review" | "completed";
+  priority: "low" | "medium" | "high";
+  assignedTo: string;  // User ID
+  assignedBy: string;  // User ID
+  dueDate: string;     // ISO 8601 date
+  createdAt: string;   // ISO 8601 timestamp
+  updatedAt: string;   // ISO 8601 timestamp
+  unreadMessages: number;
+}
+```
+
+### Chat
+```typescript
+interface Chat {
+  id: string;
+  type: "dm" | "task" | "shot";
+  name: string;
+  avatar?: string;
+  participants: string[];  // Array of User IDs
+  lastMessage?: Message;
+  unreadCount: number;
+  isPinned: boolean;
+  taskId?: string;    // If type is "task"
+  shotId?: string;    // If type is "shot"
+  projectId?: string;
+}
+```
+
+### Message
+```typescript
+interface Message {
+  id: string;
+  chatId: string;
+  senderId: string;
+  content: string;
+  timestamp: string;  // ISO 8601 timestamp
+  imageUrl?: string;  // Optional WIP image
+  isRead: boolean;
+}
+```
+
+### Project
+```typescript
+interface Project {
+  id: string;
+  name: string;
+  thumbnail: string;
+  shotCount: number;
+  completedShots: number;
+  deadline: string;  // ISO 8601 date
+}
+```
+
+### Shot
+```typescript
+interface Shot {
+  id: string;
+  projectId: string;
+  code: string;       // e.g., "NR_010"
+  name: string;
+  thumbnail: string;
+  taskCount: number;
+  completedTasks: number;
+  deadline?: string;
+}
+```
+
+---
+
+## State Management
+
+### AppContext (Global State)
+The app uses `@nkzw/create-context-hook` to create a type-safe context provider. Located in `context/AppContext.tsx`.
+
+#### Stored State
+- `currentUser`: Active user object
+- `users`: All users in the system
+- `tasks`: All tasks
+- `chats`: All chat threads
+- `projects`: All projects
+- `shots`: All shots
+- `messages`: Record of chat messages by chat ID
+- `isLoading`: Initial load state
+
+#### Computed Values
+- `myTasks`: Tasks assigned to current user
+- `assignedTasks`: Tasks with "assigned" status
+- `inProgressTasks`: Tasks with "in-progress" status
+- `reviewTasks`: Tasks with "review" status
+- `completedTasks`: Tasks with "completed" status
+- `allTasks`: All tasks (for managers) or myTasks (for artists)
+- `myChats`: Chats involving current user
+- `unreadChatsCount`: Number of chats with unread messages
+
+#### Actions
+- `switchUser(userId)`: Change current user
+- `switchRole()`: Toggle between artist/manager (for demo)
+- `updateTaskStatus(taskId, status)`: Update task status
+- `getTaskById(taskId)`: Get task by ID
+- `getProjectById(projectId)`: Get project by ID
+- `getShotById(shotId)`: Get shot by ID
+- `getShotsByProjectId(projectId)`: Get shots for project
+- `getTasksByShotId(shotId)`: Get tasks for shot
+- `getChatById(chatId)`: Get chat by ID
+- `getMessagesByChatId(chatId)`: Get messages for chat
+- `getUserById(userId)`: Get user by ID
+
+#### Persistence
+- User ID is persisted to AsyncStorage under key `"cinetrack-current-user"`
+- Loaded on app initialization
+- Updated when switching users/roles
+
+---
+
+## Routing & Navigation
+
+### File-Based Routing (Expo Router)
+The app uses Expo Router's file-based routing system, similar to Next.js.
+
+#### Route Mapping
+| File Path | Route | Description |
+|-----------|-------|-------------|
+| `app/(tabs)/index.tsx` | `/` | Dashboard (default) |
+| `app/(tabs)/projects.tsx` | `/projects` | Projects list |
+| `app/(tabs)/chat.tsx` | `/chat` | Chat list |
+| `app/(tabs)/profile.tsx` | `/profile` | User profile |
+| `app/task/[id].tsx` | `/task/:id` | Task detail |
+| `app/chat/[id].tsx` | `/chat/:id` | Chat conversation |
+| `app/project/[id].tsx` | `/project/:id` | Project detail (stub) |
+| `app/shot/[id].tsx` | `/shot/:id` | Shot detail (stub) |
+
+#### Navigation Modes
+- **Tabs**: Bottom tab bar (always visible on main screens)
+- **Stack**: Card-style push navigation (task/chat/project/shot details)
+- **Modal**: Could be added for future features
+
+#### Header Configuration
+- Global header style: Dark background (#2A2D35), white text
+- Tab screens: Headers hidden (custom headers in component)
+- Detail screens: Standard header with back button
+- Customizable per-screen via `options` prop
+
+---
+
+## UI Components
+
+### Custom Components
+
+#### 1. GradientButton
+**Path**: `components/GradientButton.tsx`
+
+**Variants**:
+- `primary`: Orange-to-yellow gradient (accent colors)
+- `secondary`: Solid dark background
+- `outline`: Purple border, transparent background
+
+**Props**:
+```typescript
+{
+  title: string;
+  onPress: () => void;
+  variant?: "primary" | "secondary" | "outline";
+  disabled?: boolean;
+  loading?: boolean;
+  icon?: React.ReactNode;
+  fullWidth?: boolean;
+}
+```
+
+#### 2. Badge
+**Path**: `components/Badge.tsx`
+
+**Purpose**: Display unread counts on tabs and chat items
+
+**Props**:
+```typescript
+{
+  count: number;
+  size?: "small" | "medium";
+}
+```
+
+**Behavior**: Returns null if count is 0, displays "99+" if count > 99
+
+#### 3. RobotEmptyState
+**Path**: Inline in `app/(tabs)/index.tsx`
+
+**Purpose**: Friendly empty state illustration with custom robot design
+
+**Features**:
+- Animated glow effect (shadow)
+- Custom robot illustration using React Native primitives
+- Antenna with glowing top
+- Body with clipboard
+- Friendly message text
+
+### Shared Patterns
+
+#### Task Card
+- Gradient background (secondary → tertiary)
+- Shot code (cyan text)
+- Status badge (colored by status)
+- Title and description
+- Priority dot indicator
+- Assigned by metadata
+- Unread message badge
+
+#### Chat Item
+- Avatar image (48x48, rounded)
+- Name and timestamp
+- Last message preview
+- Unread badge
+- Tap to open conversation
+
+#### Segment Control
+- Two-segment toggle (Assigned/Completed)
+- Rounded pill design
+- Smooth selection animation
+- Active state with accent color
+
+---
+
+## Screen Details
+
+### 1. Dashboard (`app/(tabs)/index.tsx`)
+**Purpose**: Main task view for current user
+
+**Sections**:
+- Header with greeting and role subtitle
+- Segmented control (Assigned / Completed)
+- Task list (cards)
+- Empty state with robot + CTA button
+
+**Interactions**:
+- Tap task → Navigate to task detail
+- Tap "Contact Your Manager" → Navigate to DM chat
+- Switch segments → Filter tasks
+
+**Empty State**:
+- Robot illustration with glow
+- "No tasks assigned yet!" message
+- "Contact Your Manager" button
+
+### 2. Projects (`app/(tabs)/projects.tsx`)
+**Purpose**: View all active projects
+
+**Features**:
+- Project count in subtitle
+- Thumbnail images (160px height)
+- Progress bar with percentage
+- Completed vs total shots
+- Deadline display
+- Tap to view project details
+
+### 3. Chat List (`app/(tabs)/chat.tsx`)
+**Purpose**: Organized view of all conversations
+
+**Sections** (conditional rendering):
+1. **Pinned**: `isPinned === true`
+2. **Unread**: `unreadCount > 0 && !isPinned`
+3. **Direct Messages**: `type === "dm" && unreadCount === 0 && !isPinned`
+4. **Task Chats**: `type === "task" && unreadCount === 0 && !isPinned`
+
+**Chat Item Features**:
+- Avatar (or default Dicebear avatar)
+- Name
+- Last message snippet
+- Timestamp (HH:MM format)
+- Unread badge
+
+### 4. Profile (`app/(tabs)/profile.tsx`)
+**Purpose**: User settings and role management
+
+**Content**:
+- Large avatar (100x100)
+- User name
+- Role badge (Artist/Manager)
+- Email address
+- **Role Section**: Switch between roles (demo feature)
+- **About Section**: App description
+- **Sign Out Button**: Outlined in red (non-functional)
+
+### 5. Task Detail (`app/task/[id].tsx`)
+**Purpose**: Full task information and actions
+
+**Content**:
+- Shot code and status badge
+- Task title and description
+- Metadata table:
+  - Priority
+  - Assigned to
+  - Assigned by
+  - Due date
+- **Chat Preview Card**: Link to task chat with unread count
+- **Actions Section**: Status update buttons
+
+**Status Workflow**:
+- `assigned` → "Start Working" → `in-progress`
+- `in-progress` → "Submit for Review" → `review`
+- `review` → "Mark Complete" → `completed`
+
+### 6. Chat Conversation (`app/chat/[id].tsx`)
+**Purpose**: Real-time messaging interface
+
+**Features**:
+- Message bubbles (left/right aligned)
+- Avatar for other users
+- Sender name (for non-current user)
+- Message content
+- Timestamp (HH:MM)
+- Different bubble colors (gray vs purple)
+- **Input Field**: Rounded, multi-line (max 100px height)
+- **Send Button**: Glowing accent circle with icon
+- **Keyboard Handling**: KeyboardAvoidingView for iOS
+
+**Message Layout**:
+- **Other user**: Left-aligned, gray bubble, avatar on left
+- **Current user**: Right-aligned, purple bubble, no avatar
+
+### 7. Project Detail (`app/project/[id].tsx`)
+**Status**: Stub implementation
+
+**Current**: Shows "Project details coming soon..."
+
+**Future**: Will show shots, tasks, team members, progress
+
+### 8. Shot Detail (`app/shot/[id].tsx`)
+**Status**: Stub implementation
+
+**Current**: Shows "Shot details coming soon..."
+
+**Future**: Will show shot info, tasks, team chat
+
+---
+
+## Mock Data
+
+### Users (4)
+1. **Sarah Chen** - Artist (default login)
+2. **Michael Rodriguez** - Manager
+3. **Emma Wilson** - Artist
+4. **James Park** - Artist
+
+### Projects (3)
+1. **Nebula Rising** - 24 shots, 18 completed, due 2025-12-20
+2. **City of Tomorrow** - 36 shots, 12 completed, due 2025-11-30
+3. **Ocean Depths** - 18 shots, 15 completed, due 2025-11-25
+
+### Shots (3)
+1. **NR_010**: Starship Launch Sequence (Nebula Rising)
+2. **NR_015**: Nebula Flythrough (Nebula Rising)
+3. **CT_042**: Downtown Chase (City of Tomorrow)
+
+### Tasks (4)
+All assigned to Sarah Chen (Artist) by Michael Rodriguez (Manager):
+1. **Composite rocket exhaust** - In Progress, High Priority
+2. **Environment matte painting** - Review, Medium Priority
+3. **Vehicle tracking** - Assigned, High Priority
+4. **Color grading pass** - Completed, Low Priority
+
+### Chats (5)
+1. **DM with Michael** - Pinned, 2 unread
+2. **Task Chat: Composite rocket exhaust** - 0 unread
+3. **DM with Emma** - 0 unread
+4. **Task Chat: Vehicle tracking** - 1 unread
+5. **Shot Chat: NR_010** - 0 unread
+
+---
+
+## Installation & Setup
+
+### Prerequisites
+- Node.js 18+ or Bun
+- Expo CLI
+- iOS Simulator (Mac) or Android Emulator
+- Physical device with Expo Go app (optional)
+
+### Installation
+```bash
+# Install dependencies
+bun install
+
+# Start development server
+bun run start
+
+# Start for web
+bun run start-web
+
+# Start with web debugging
+bun run start-web-dev
+```
+
+### Testing on Devices
+- **Web**: Opens in browser automatically
+- **iOS/Android**: Scan QR code with Expo Go app
+- The app is designed for cross-platform compatibility
+
+---
+
+## Future Implementation (Not Yet Built)
+
+### High Priority
+1. **Backend Integration**
+   - Real-time chat with WebSocket
+   - Task synchronization
+   - User authentication
+   - File upload for WIP images
+
+2. **Shot Detail Screen**
+   - Task list for shot
+   - Shot chat access
+   - Shot metadata
+   - Thumbnail viewer
+
+3. **Project Detail Screen**
+   - Shots grid/list
+   - Project progress overview
+   - Team members
+   - Project chat
+
+4. **Notifications**
+   - Push notification setup
+   - Badge counts on app icon
+   - In-app notification center
+   - Sound/vibration settings
+
+### Medium Priority
+5. **Enhanced Chat**
+   - Image sharing
+   - Emoji reactions
+   - Typing indicators
+   - Read receipts
+   - Message search
+
+6. **Task Creation (Manager)**
+   - New task form
+   - Artist assignment
+   - Due date picker
+   - Priority selection
+
+7. **WIP Upload**
+   - Image picker integration
+   - Video support
+   - Inline preview
+   - Version history
+
+### Low Priority
+8. **Search & Filters**
+   - Task search
+   - Filter by status/priority
+   - Project filtering
+   - Date range filters
+
+9. **Settings**
+   - Notification preferences
+   - Theme customization
+   - Profile editing
+   - Language selection
+
+10. **Analytics Dashboard (Manager)**
+    - Team performance
+    - Project timeline
+    - Bottleneck identification
+
+---
+
+## Development Notes
+
+### Code Style
+- **TypeScript strict mode**: Enabled
+- **Functional components**: Only (no class components)
+- **Hooks**: Extensive use of useState, useCallback, useEffect
+- **Styling**: StyleSheet API (no inline styles)
+- **Icons**: Lucide React Native
+- **Images**: Expo Image (optimized)
+
+### Performance Considerations
+- Memoization not heavily used (React Compiler not enabled)
+- Manual optimization needed for large lists
+- Virtual list implementation may be needed for scale
+
+### Web Compatibility
+- PanResponder used instead of React Native Gesture Handler
+- Animated API preferred over Reanimated
+- Platform checks where necessary
+- React Native Web compatibility maintained
+
+### Accessibility
+- Not yet implemented
+- Future: Screen reader support, voice control, contrast modes
+
+### Testing
+- No tests currently implemented
+- TestID props available on key components
+- Manual QA process
+
+---
+
+## Dependencies Summary
+
+### Core
+- `expo` (^54.0.20)
+- `react` (19.1.0)
+- `react-native` (0.81.5)
+- `expo-router` (~6.0.13)
+
+### UI & Styling
+- `expo-linear-gradient` (~15.0.7)
+- `expo-blur` (~15.0.7)
+- `expo-image` (~3.0.10)
+- `lucide-react-native` (^0.475.0)
+- `react-native-svg` (15.12.1)
+- `expo-symbols` (~1.0.7)
+
+### State & Data
+- `@nkzw/create-context-hook` (^1.1.0)
+- `@tanstack/react-query` (^5.83.0)
+- `zustand` (^5.0.2)
+- `@react-native-async-storage/async-storage` (2.2.0)
+
+### Navigation & Layout
+- `react-native-safe-area-context` (~5.6.0)
+- `react-native-screens` (~4.16.0)
+- `react-native-gesture-handler` (~2.28.0)
+
+### Other
+- `expo-haptics` (~15.0.7) - Platform-specific feedback
+- `expo-image-picker` (~17.0.8) - Future WIP uploads
+- `expo-font` (~14.0.9) - Custom fonts (not used yet)
+
+---
+
+## Key Design Decisions
+
+1. **No Backend Initially**: Using mock data to prototype UX quickly
+2. **File-Based Routing**: Expo Router for scalable navigation
+3. **Minimal Dependencies**: Only essential packages to reduce bundle size
+4. **Dark-First Design**: No light mode (VFX studios prefer dark UIs)
+5. **Role Switcher**: Built-in demo feature for testing both user types
+6. **Platform Agnostic**: Web + mobile support from day one
+7. **TypeScript Strict**: Type safety to prevent runtime errors
+
+---
+
+## Known Issues & Limitations
+
+1. **No Real Backend**: All data is local and resets on reload
+2. **No Push Notifications**: System not implemented
+3. **No Image Upload**: WIP sharing not functional
+4. **Stub Detail Screens**: Project and Shot screens incomplete
+5. **No Search**: Large datasets will be hard to navigate
+6. **No Error Handling**: Assumes all operations succeed
+7. **No Loading States**: Beyond initial app load
+8. **Hard-Coded Chat Links**: Task detail always opens "chat-2"
+9. **No Message Sending**: Chat input doesn't save messages
+10. **No Real-Time Updates**: Changes don't sync across instances
+
+---
+
+## Contact & Handoff
+
+### Important Files for Next Agent
+1. **`context/AppContext.tsx`**: All state management logic
+2. **`types/index.ts`**: Complete type definitions
+3. **`mocks/data.ts`**: Sample data structure
+4. **`constants/colors.ts`**: Design system colors
+5. **`app/_layout.tsx`**: Provider setup
+6. **`app/(tabs)/_layout.tsx`**: Navigation structure
+
+### Where to Start
+- **Add Backend**: Replace mock data with API calls in AppContext
+- **Complete Screens**: Finish Project and Shot detail screens
+- **Real Chat**: Implement message sending and WebSocket
+- **Notifications**: Set up expo-notifications
+- **WIP Upload**: Enable image picker and upload flow
+
+### Design Resources
+- Empty state robot is custom-built in code
+- All colors defined in constants/colors.ts
+- Lucide icons used throughout
+- Avatars from Dicebear API (api.dicebear.com/7.x/avataaars)
+- Stock images from Unsplash
+
+---
+
+## License & Credits
+
+**Project**: CineTrack Mobile  
+**Built With**: Expo, React Native, TypeScript  
+**Design Inspiration**: iOS, Instagram, Airbnb, modern habit trackers  
+**Icon Library**: Lucide React Native  
+**Avatar Service**: Dicebear  
+**Image Service**: Unsplash  
+
+---
+
+**Last Updated**: 2025-11-15  
+**Document Version**: 1.0  
+**Status**: Active Development

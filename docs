@@ -1,0 +1,141 @@
+# CTrack Mobile Architecture
+
+## System Overview
+`ctrack_mobile` is a mobile-first PWA connected to `ctrack_v0` backend domain services.
+
+- Client: Expo Router app (PWA-first)
+- Backend: Next.js API routes + Supabase
+- Data: Supabase Postgres with RLS
+- Realtime: Supabase Realtime
+- Media: AWS S3 (presigned uploads/downloads)
+- Admin: Desktop control center in `ctrack_v0`
+
+```mermaid
+flowchart LR
+  ArtistApp[ArtistMobileApp] -->|Auth + API| NextApi[NextApiRoutes]
+  AdminWeb[AdminControlCenter] -->|Ops + Approvals| NextApi
+  NextApi --> SupabaseDB[(SupabasePostgres)]
+  NextApi --> Realtime[SupabaseRealtime]
+  NextApi --> S3[(AwsS3)]
+  ArtistApp --> Realtime
+```
+
+## Client Architecture
+- Expo Router tabs: `Home`, `Work`, `Chat`, `Me`
+- React Query for server state
+- Offline cache + mutation queue for timesheets/reminders
+- Shared UI primitives (`GlassCard`, `PrimaryButton`, `TimerPill`)
+
+### Launch/Login Animation Architecture
+- Add startup flow components:
+  - `LogoSplashScreen`
+  - `AuthLoadingGate`
+  - `LoginScreen`
+- Define a shared `BrandSpinner` primitive in mobile UI layer modeled after `ctrack_v0/components/ui/spinner.tsx` (`ctrack`/`modern` style)
+- Use one animation system (`react-native-reanimated`) for:
+  - logo reveal
+  - spinner loop
+  - auth state transition
+- Enforce loading-state consistency: same spinner token set across splash, login, and data fetch placeholders
+
+### Adaptive UI Architecture
+- Build a responsive utility layer:
+  - `useAdaptiveLayout()` hook for width/height class and orientation
+  - `getSpacingScale()` and `getTypographyScale()` helpers by breakpoint
+  - `isCompact`, `isStandard`, `isLarge`, `isTablet` flags for component branching
+- Use `useWindowDimensions()` + `react-native-safe-area-context` for runtime layout
+- Keep design tokens semantic (size tokens), not absolute pixel hardcoding
+- Keyboard-aware layout strategy:
+  - Chat input and action bars pinned with keyboard-safe offsets
+  - Avoid fixed bottom offsets; compute with safe area + keyboard height
+- Adaptive navigation:
+  - Bottom tabs for phone sizes
+  - Optional split/two-pane containers for tablet/large displays
+
+## Domain Data Model Additions
+- `chat_rooms`
+- `chat_room_members`
+- `chat_messages`
+- `chat_attachments`
+- `artist_location_tracks` (with `motion_state`)
+- `location_sessions` (with active poll interval/policy)
+- `notification_events`
+- `user_notification_preferences`
+- `device_push_tokens`
+- `productivity_snapshots`
+- `daily_motivations`
+- `expense_claims`
+- `expense_receipts`
+- `expense_approvals`
+
+## API Contracts (v1)
+- `POST/GET /api/v1/mobile/timesheets`
+- `POST/GET /api/v1/mobile/leaves`
+- `GET /api/v1/mobile/dashboard`
+- `POST/GET /api/v1/mobile/chat/rooms`
+- `POST /api/v1/mobile/chat/messages`
+- `POST /api/v1/mobile/chat/upload-url`
+- `POST /api/v1/mobile/location/batch`
+- `POST /api/v1/mobile/notifications/register-token`
+- `GET /api/v1/mobile/notifications`
+- `POST /api/v1/mobile/notifications/read`
+- `POST /api/v1/mobile/reminders/preferences`
+- `POST /api/v1/mobile/reminders/snooze`
+- `GET /api/v1/mobile/tools/focus-state`
+- `POST/GET /api/v1/mobile/expenses`
+- `POST /api/v1/mobile/expenses/upload-url`
+- `POST /api/v1/mobile/expenses/submit`
+- `POST /api/v1/admin/expenses/review`
+- `POST /api/v1/admin/expenses/mark-paid`
+
+## Realtime Chat Architecture
+- Channel per room
+- Optimistic send + retry queue
+- Load latest N messages, paginate older
+- Attachment flow:
+  1. Request presigned URL
+  2. Upload to S3
+  3. Save message row with attachment metadata
+
+## GPS Adaptive Tracking
+- Moving (>1.5 km/h): continuous/high frequency (10-30s)
+- Stationary: 30-minute interval
+- Shift ended: low-frequency heartbeat
+- User pause/resume tracking supported with audit log
+
+## Offline Sync Design
+- Persisted query cache
+- Local mutation queue for writes
+- Sync on connectivity restore
+- Conflict rules:
+  - Draft writes: client last-write-wins
+  - Approved records: server authority
+
+## Notification Architecture
+- Push + in-app inbox + badge model
+- Deep-link payload to target screen
+- Dedup/idempotency keys
+- Quiet hours + digest preferences
+- Include expense events: submitted, approved, rejected, paid
+
+## Security & Compliance
+- RLS on all new tables
+- Server-side role checks on admin APIs
+- Signed URLs for media access
+- Data retention jobs (chat/location)
+- Consent-required GPS and audio features
+- Expense receipt files restricted to claimant + finance/admin scopes
+
+## Observability
+- API latency/error metrics
+- Realtime message delivery metrics
+- Offline queue depth and flush success
+- Notification delivery/open/action metrics
+- Location ingestion success and anomaly metrics
+
+## Deployment Topology
+- Mobile PWA: Expo web build
+- Admin/API: Next.js deploy
+- Supabase managed services
+- S3 bucket with strict IAM + lifecycle policies
+
