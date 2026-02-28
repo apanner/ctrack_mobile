@@ -1,10 +1,10 @@
 import { Tabs } from 'expo-router';
 import { colors } from '../../constants/colors';
-import { Home, Briefcase, MessageCircle, User } from 'lucide-react-native';
+import { Home, Clock, MessageCircle, User } from 'lucide-react-native';
 import { FloatingTimerPill } from '../../components/FloatingTimerPill';
 import { useNotifications } from '../../lib/api/notifications';
 import { BlurView } from 'expo-blur';
-import { StyleSheet, Platform } from 'react-native';
+import { StyleSheet, Platform, View } from 'react-native';
 import { uiTokens } from '../../constants/ui-tokens';
 
 export default function TabsLayout() {
@@ -17,35 +17,58 @@ export default function TabsLayout() {
       <Tabs
         screenOptions={{
           headerShown: false,
-          tabBarActiveTintColor: colors.accent,
-          tabBarInactiveTintColor: colors.textSecondary,
+          tabBarActiveTintColor: colors.cyan,
+          tabBarInactiveTintColor: colors.textTertiary,
           sceneStyle: {
             backgroundColor: colors.background,
           },
           tabBarStyle: {
             position: 'absolute',
             bottom: Platform.OS === 'ios' ? 24 : 16,
-            left: uiTokens.spacing.lg,
-            right: uiTokens.spacing.lg,
+            left: 14,
+            right: 14,
             elevation: 0,
-            height: 64,
-            borderRadius: 32,
+            height: 58,
+            borderRadius: 999,
             borderTopWidth: 0,
             backgroundColor: 'transparent',
+            borderWidth: 1,
+            borderColor: 'rgba(255,255,255,0.06)',
+            overflow: 'hidden',
             shadowColor: '#000',
-            shadowOffset: { width: 0, height: 10 },
-            shadowOpacity: 0.3,
-            shadowRadius: 20,
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.5,
+            shadowRadius: 32,
           },
           tabBarHideOnKeyboard: true,
           tabBarBackground: () => (
-            <BlurView 
-              intensity={60} 
-              tint="dark" 
-              style={[StyleSheet.absoluteFill, { borderRadius: 32, overflow: 'hidden', backgroundColor: 'rgba(24,24,27,0.6)' }]} 
-            />
+            <View style={StyleSheet.absoluteFill}>
+              <BlurView
+                intensity={40}
+                tint="dark"
+                style={[
+                  StyleSheet.absoluteFill,
+                  {
+                    borderRadius: 999,
+                    overflow: 'hidden',
+                    backgroundColor: 'rgba(18,18,20,0.82)',
+                  },
+                ]}
+              />
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 1,
+                  backgroundColor: 'rgba(0,229,255,0.08)',
+                }}
+              />
+            </View>
           ),
-          tabBarShowLabel: false,
+          tabBarShowLabel: true,
+          tabBarLabelStyle: { fontSize: 10, fontWeight: '600' },
           tabBarItemStyle: {
             paddingTop: uiTokens.spacing.md,
             paddingBottom: uiTokens.spacing.md,
@@ -66,7 +89,7 @@ export default function TabsLayout() {
           options={{
             title: 'Work',
             tabBarIcon: ({ color, focused }) => (
-              <Briefcase size={focused ? 22 : 20} color={color} />
+              <Clock size={focused ? 22 : 20} color={color} />
             ),
           }}
         />
@@ -79,6 +102,10 @@ export default function TabsLayout() {
             ),
             tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
           }}
+        />
+        <Tabs.Screen
+          name="tasks"
+          options={{ href: null }}
         />
         <Tabs.Screen
           name="me"

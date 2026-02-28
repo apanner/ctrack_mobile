@@ -1,11 +1,12 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCurrentUser } from '../../lib/api/profile';
 import { signOut } from '../../lib/auth';
 import { colors } from '../../constants/colors';
 import { Image } from 'expo-image';
-import { LogOut, Mail, Briefcase, Calendar, Receipt, Bell, Focus, Clock } from 'lucide-react-native';
+import { LogOut, Mail, Briefcase, Calendar, Receipt, Bell, Focus, Clock, Settings, Smartphone } from 'lucide-react-native';
 import { LocationSection } from '../../components/LocationSection';
+import { PwaInstallBanner } from '../../components/PwaInstallBanner';
 import { useNotifications } from '../../lib/api/notifications';
 import { router } from 'expo-router';
 import { ActivityIndicator } from 'react-native';
@@ -78,7 +79,22 @@ export default function MeScreen() {
 
         <LocationSection />
 
+        <PwaInstallBanner />
+
         <View style={styles.menuSection}>
+          {Platform.OS === 'web' && (
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => router.push('/settings/pwa-install')}
+              activeOpacity={0.7}
+            >
+              <Smartphone size={22} color={colors.accent} />
+              <View style={styles.menuItemContent}>
+                <Text style={styles.menuItemText}>Add to Home Screen</Text>
+                <Text style={styles.menuItemSubtext}>Install CTrack for quick access</Text>
+              </View>
+            </TouchableOpacity>
+          )}
           <TouchableOpacity
             style={styles.menuItem}
             onPress={() => router.push('/notifications')}
@@ -145,6 +161,17 @@ export default function MeScreen() {
             <View style={styles.menuItemContent}>
               <Text style={styles.menuItemText}>Reminders</Text>
               <Text style={styles.menuItemSubtext}>Smart shift & timesheet reminders</Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => router.push('/settings')}
+            activeOpacity={0.7}
+          >
+            <Settings size={22} color={colors.accent} />
+            <View style={styles.menuItemContent}>
+              <Text style={styles.menuItemText}>Settings</Text>
+              <Text style={styles.menuItemSubtext}>Notifications, chat & PWA</Text>
             </View>
           </TouchableOpacity>
         </View>

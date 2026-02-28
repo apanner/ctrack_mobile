@@ -9,7 +9,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0A0A0F"
+      "backgroundColor": "#050506"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
@@ -19,7 +19,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0A0A0F"
+        "backgroundColor": "#050506"
       },
       "package": "app.rork.cinetrack_mobile"
     },
@@ -28,10 +28,14 @@
       "bundler": "metro",
       "name": "CTrack Artist Manager",
       "shortName": "CTrack",
-      "themeColor": "#0A0A0F",
-      "backgroundColor": "#0A0A0F",
+      "themeColor": "#FF6B4A",
+      "backgroundColor": "#050506",
       "display": "standalone",
-      "orientation": "portrait"
+      "orientation": "portrait",
+      "icons": [
+        { "src": "./assets/icon.png", "sizes": "192x192", "type": "image/png" },
+        { "src": "./assets/icon.png", "sizes": "512x512", "type": "image/png" }
+      ]
     },
     "scheme": "cinetrack",
     "plugins": ["expo-router", "expo-notifications", ["expo-image-picker", {"photosPermission": "Allow CTrack to access your photos to share images in chat."}], ["expo-audio", {"microphonePermission": "Allow CTrack to access your microphone to record voice messages."}],

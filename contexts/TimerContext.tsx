@@ -10,6 +10,7 @@ interface TimerContextValue {
   activeTimer: ActiveTimer | null;
   setActiveTimer: (timer: ActiveTimer | null) => void;
   elapsed: string;
+  elapsedMs: number;
 }
 
 const TimerContext = createContext<TimerContextValue | null>(null);
@@ -19,6 +20,14 @@ function formatElapsed(ms: number): string {
   const h = Math.floor(totalMinutes / 60);
   const m = totalMinutes % 60;
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
+}
+
+export function formatElapsedHMS(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000);
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  return [h, m, s].map((n) => n.toString().padStart(2, '0')).join(':');
 }
 
 export function TimerProvider({ children }: { children: React.ReactNode }) {
@@ -31,7 +40,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     const start = activeTimer.startedAt.getTime();
     const tick = () => setElapsedMs(Date.now() - start);
     tick();
-    intervalRef.current = setInterval(tick, 60000);
+    intervalRef.current = setInterval(tick, 1000);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
@@ -45,7 +54,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   const elapsed = activeTimer ? formatElapsed(elapsedMs) : '';
 
   return (
-    <TimerContext.Provider value={{ activeTimer, setActiveTimer, elapsed }}>
+    <TimerContext.Provider value={{ activeTimer, setActiveTimer, elapsed, elapsedMs }}>
       {children}
     </TimerContext.Provider>
   );

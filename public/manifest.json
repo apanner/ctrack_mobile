@@ -1,0 +1,23 @@
+{
+  "name": "CTrack Artist Manager",
+  "short_name": "CTrack",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#050506",
+  "background_color": "#050506",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

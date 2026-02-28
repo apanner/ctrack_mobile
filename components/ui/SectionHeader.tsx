@@ -7,16 +7,19 @@ interface SectionHeaderProps {
   title: string;
   actionLabel?: string;
   onActionPress?: () => void;
+  /** Use design-d section label style (small, uppercase) */
+  compact?: boolean;
 }
 
 export function SectionHeader({
   title,
   actionLabel,
   onActionPress,
+  compact = false,
 }: SectionHeaderProps) {
   return (
     <View style={styles.row}>
-      <Text style={styles.title}>{title}</Text>
+      <Text style={[styles.title, compact && styles.titleCompact]}>{title}</Text>
       {actionLabel && onActionPress ? (
         <TouchableOpacity onPress={onActionPress} activeOpacity={0.8}>
           <Text style={styles.action}>{actionLabel}</Text>
@@ -38,6 +41,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.text,
     letterSpacing: -0.3,
+  },
+  titleCompact: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.08,
+    color: colors.textTertiary,
+    textTransform: 'uppercase',
   },
   action: {
     fontSize: uiTokens.text.body,

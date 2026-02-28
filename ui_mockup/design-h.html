@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>H — Neon Prism</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#08080C;--s1:#101016;--s2:#18181F;--bdr:rgba(255,255,255,.06);
+  --w:#F0F0F2;--w2:#8888A0;--w3:#50506A;
+  --pink:#F472B6;--violet:#A78BFA;--blue:#60A5FA;--cyan:#22D3EE;--green:#34D399;--amber:#FBBF24;--red:#FB7185;
+  --mesh:linear-gradient(135deg,rgba(244,114,182,.15),rgba(167,139,250,.1),rgba(34,211,238,.08));
+  --r:18px;--rl:26px;--pill:999px;
+  font-family:'Inter',system-ui,sans-serif;color-scheme:dark;
+}
+html,body{height:100%;overflow:hidden}
+body{background:#000;display:grid;place-items:center}
+
+.dev{
+  width:min(393px,100vw);height:min(852px,100vh);position:relative;overflow:hidden;
+  background:var(--bg);border-radius:44px;border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 0 80px rgba(167,139,250,.06),0 40px 100px rgba(0,0,0,.8);
+}
+.bar{height:54px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;position:relative;z-index:20}
+.bar .notch{width:126px;height:34px;background:#000;border-radius:0 0 20px 20px;position:absolute;top:0;left:50%;transform:translateX(-50%)}
+.bar .tm{font-size:15px;font-weight:600;color:var(--w)}
+
+.stk{position:absolute;inset:0;top:54px;bottom:78px;overflow:hidden}
+.v{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:0 20px 40px;
+  transition:transform .46s cubic-bezier(.25,.9,.1,1),opacity .36s ease;
+  will-change:transform,opacity;-webkit-overflow-scrolling:touch;
+}
+.v::-webkit-scrollbar{display:none}
+.v.a{transform:translateX(0);opacity:1;pointer-events:auto}
+.v.h{transform:translateX(-26%);opacity:0;pointer-events:none}
+.v.f{transform:translateX(100%);opacity:0;pointer-events:none}
+
+/* Tab dock — glass with color line */
+.dock{
+  position:absolute;bottom:10px;left:14px;right:14px;z-index:30;
+  height:56px;border-radius:20px;padding:0 4px;
+  background:rgba(16,16,22,.88);backdrop-filter:blur(40px)saturate(1.6);-webkit-backdrop-filter:blur(40px)saturate(1.6);
+  border:1px solid rgba(255,255,255,.06);display:flex;align-items:center;
+  box-shadow:0 -1px 0 0 rgba(167,139,250,.15) inset,0 8px 32px rgba(0,0,0,.5);
+}
+.dt{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;
+  cursor:pointer;border-radius:14px;transition:.2s;-webkit-user-select:none;user-select:none;
+}
+.dt:active{background:rgba(255,255,255,.04)}
+.dt svg{width:20px;height:20px;stroke-width:1.8;fill:none;stroke:var(--w3);transition:.2s}
+.dt span{font-size:9px;font-weight:600;color:var(--w3);transition:.2s}
+.dt.a svg{stroke:var(--pink)}
+.dt.a span{color:var(--w)}
+
+/* Atoms */
+.lb{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--w3);text-transform:uppercase;margin-bottom:10px}
+.bx{
+  background:var(--s1);border:1px solid var(--bdr);border-radius:var(--rl);padding:16px;margin-bottom:10px;
+  position:relative;overflow:hidden;
+}
+.bx::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(244,114,182,.12),rgba(167,139,250,.12),transparent)}
+.bt{
+  display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:50px;
+  border-radius:14px;border:0;font-weight:700;font-size:15px;cursor:pointer;transition:transform .15s;
+}
+.bt:active{transform:scale(.96)}
+.bt.p{background:linear-gradient(135deg,var(--pink),var(--violet));color:#fff;box-shadow:0 4px 20px rgba(244,114,182,.25)}
+.bt.g{background:var(--s2);color:var(--w);border:1px solid var(--bdr)}
+
+/* =========== SPLASH =========== */
+#splash{
+  position:absolute;inset:0;z-index:100;
+  background:radial-gradient(ellipse at 30% 20%,rgba(244,114,182,.12),transparent 50%),
+             radial-gradient(ellipse at 70% 80%,rgba(34,211,238,.1),transparent 50%),
+             var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity .7s ease,transform .5s ease;
+}
+#splash.x{opacity:0;transform:scale(1.06);pointer-events:none}
+.slogo{position:relative;width:100px;height:100px;display:flex;align-items:center;justify-content:center}
+.slogo .o1{position:absolute;inset:-6px;border-radius:50%;border:2.5px solid transparent;border-top-color:var(--pink);border-right-color:var(--violet);animation:rot 1.1s linear infinite}
+.slogo .o2{position:absolute;inset:6px;border-radius:50%;border:2px solid transparent;border-bottom-color:var(--cyan);border-left-color:var(--blue);animation:rot 1.8s linear infinite reverse}
+.slogo .o3{position:absolute;inset:18px;border-radius:50%;border:1.5px solid transparent;border-top-color:var(--green);animation:rot 2.4s linear infinite}
+.slogo .cc{font-size:36px;font-weight:900;background:linear-gradient(135deg,var(--pink),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+@keyframes rot{to{transform:rotate(360deg)}}
+.stit{font-size:30px;font-weight:900;letter-spacing:-1px;margin-top:24px;background:linear-gradient(135deg,var(--pink),var(--violet),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.ssub{font-size:13px;color:var(--w3);margin-top:6px}
+.sbar{width:120px;height:2px;background:var(--s2);border-radius:1px;margin-top:40px;overflow:hidden}
+.sbar div{height:100%;width:0;background:linear-gradient(90deg,var(--pink),var(--cyan));animation:sbl 2.2s ease forwards}
+@keyframes sbl{to{width:100%}}
+
+/* =========== HOME =========== */
+.hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.hdr .g{font-size:13px;font-weight:600;color:var(--w2)}
+.hdr .n{font-size:28px;font-weight:900;letter-spacing:-.6px;color:var(--w);margin-top:2px}
+.hdr .av{
+  width:44px;height:44px;border-radius:50%;
+  background:linear-gradient(135deg,var(--pink),var(--violet));
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#fff;
+  flex-shrink:0;cursor:pointer;box-shadow:0 2px 14px rgba(244,114,182,.25);
+}
+
+/* Mesh gradient timer */
+.tmr{
+  border-radius:var(--rl);padding:20px;position:relative;overflow:hidden;cursor:pointer;
+  background:var(--s1);border:1px solid rgba(244,114,182,.15);
+}
+.tmr .mesh{position:absolute;inset:0;background:var(--mesh);pointer-events:none}
+.tmr .glow{position:absolute;top:-30px;right:-30px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(244,114,182,.15),transparent 70%);pointer-events:none;animation:ghover 3s ease-in-out infinite alternate}
+@keyframes ghover{0%{transform:translate(0,0)}100%{transform:translate(-10px,10px)}}
+.tmr .inner{position:relative;z-index:1}
+.tmr .tag{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.06em}
+.tmr .tag .pd{width:6px;height:6px;border-radius:50%;background:var(--pink);box-shadow:0 0 8px var(--pink);animation:pls 1.4s ease infinite}
+.tmr .tag .txt{background:linear-gradient(90deg,var(--pink),var(--violet));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+@keyframes pls{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(1.5)}}
+.tmr .num{font-size:42px;font-weight:900;color:var(--w);margin-top:6px;font-variant-numeric:tabular-nums;letter-spacing:-2px}
+.tmr .info{font-size:13px;color:var(--w2);margin-top:4px}
+
+/* Colorful metric pills */
+.ms{display:flex;gap:8px;margin-top:14px}
+.mc{
+  flex:1;text-align:center;padding:14px 4px;border-radius:16px;background:var(--s1);border:1px solid var(--bdr);
+  position:relative;overflow:hidden;
+}
+.mc::after{content:'';position:absolute;bottom:0;left:20%;right:20%;height:2px;border-radius:1px}
+.mc:nth-child(1)::after{background:var(--cyan)}
+.mc:nth-child(2)::after{background:var(--pink)}
+.mc:nth-child(3)::after{background:var(--green)}
+.mc .mv{font-size:20px;font-weight:800;color:var(--w)}
+.mc .mk{font-size:10px;font-weight:600;color:var(--w3);margin-top:2px;text-transform:uppercase}
+
+/* Shot cards — colorful left border */
+.hs{display:flex;gap:10px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:2px 0}
+.hs::-webkit-scrollbar{display:none}
+.sc{
+  min-width:165px;padding:16px;border-radius:20px;flex-shrink:0;cursor:pointer;
+  background:var(--s1);border:1px solid var(--bdr);transition:transform .2s;
+  position:relative;overflow:hidden;
+}
+.sc::before{content:'';position:absolute;top:8px;bottom:8px;left:0;width:3px;border-radius:0 2px 2px 0}
+.sc:nth-child(1)::before{background:var(--pink)}
+.sc:nth-child(2)::before{background:var(--cyan)}
+.sc:nth-child(3)::before{background:var(--violet)}
+.sc:active{transform:scale(.97)}
+.sc .code{font-size:15px;font-weight:700;color:var(--w)}
+.sc .dept{font-size:12px;color:var(--w2);margin-top:3px}
+.sc .stag{display:inline-block;font-size:10px;font-weight:700;padding:4px 8px;border-radius:var(--pill);margin-top:10px}
+
+/* Colorful action chips */
+.qg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+.qc{
+  display:flex;flex-direction:column;align-items:center;gap:5px;padding:14px 4px;
+  border-radius:16px;background:var(--s1);border:1px solid var(--bdr);cursor:pointer;
+  transition:transform .15s;position:relative;overflow:hidden;
+}
+.qc::after{content:'';position:absolute;bottom:0;left:25%;right:25%;height:2px;border-radius:1px}
+.qc:nth-child(1)::after{background:var(--pink)}
+.qc:nth-child(2)::after{background:var(--blue)}
+.qc:nth-child(3)::after{background:var(--green)}
+.qc:nth-child(4)::after{background:var(--amber)}
+.qc:active{transform:scale(.95)}
+.qc .qi{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center}
+.qc span{font-size:10px;font-weight:600;color:var(--w)}
+
+/* =========== WORK =========== */
+.wstrip{display:flex;gap:5px;overflow-x:auto;padding:2px 0;-webkit-overflow-scrolling:touch}
+.wstrip::-webkit-scrollbar{display:none}
+.wday{min-width:44px;text-align:center;padding:9px 4px;border-radius:14px;cursor:pointer;flex-shrink:0;transition:.2s}
+.wday .wd{font-size:10px;font-weight:600;color:var(--w3)}
+.wday .wn{font-size:16px;font-weight:700;color:var(--w);margin-top:1px}
+.wday.now{background:linear-gradient(135deg,var(--pink),var(--violet));box-shadow:0 2px 12px rgba(244,114,182,.25)}
+.wday.now .wd,.wday.now .wn{color:#fff}
+
+.hchips{display:flex;gap:6px;margin-top:10px;margin-bottom:16px}
+.hchip{padding:8px 14px;border-radius:var(--pill);background:var(--s2);border:1px solid var(--bdr);font-size:13px;font-weight:600;color:var(--w2);cursor:pointer;transition:.2s}
+.hchip:active,.hchip.on{background:linear-gradient(135deg,var(--pink),var(--violet));color:#fff;border-color:transparent}
+
+.erow{
+  display:flex;align-items:center;gap:12px;padding:14px;border-radius:16px;
+  background:var(--s1);border:1px solid var(--bdr);margin-bottom:8px;
+  position:relative;overflow:hidden;
+}
+.erow::before{content:'';position:absolute;top:6px;bottom:6px;left:0;width:3px;border-radius:0 2px 2px 0}
+.erow:nth-child(1)::before{background:var(--green)}
+.erow:nth-child(2)::before{background:var(--violet)}
+.erow:nth-child(3)::before{background:var(--blue)}
+.erow .eh{font-size:18px;font-weight:800;color:var(--w);min-width:40px}
+.erow .ep{font-size:14px;font-weight:600;color:var(--w)}
+.erow .en{font-size:12px;color:var(--w3);margin-top:2px}
+
+/* =========== CHAT =========== */
+.cr{
+  display:flex;align-items:center;gap:12px;padding:14px;border-radius:16px;
+  background:var(--s1);border:1px solid var(--bdr);margin-bottom:8px;cursor:pointer;transition:.2s;
+}
+.cr:active{background:var(--s2)}
+.cra{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0}
+.cr .cn{font-size:14px;font-weight:600;color:var(--w)}
+.cr .cp{font-size:12px;color:var(--w3);margin-top:2px}
+.cr .ct{font-size:11px;color:var(--w3);margin-left:auto;flex-shrink:0}
+.ub{min-width:20px;height:20px;border-radius:10px;background:linear-gradient(135deg,var(--pink),var(--red));display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;padding:0 5px;margin-left:auto}
+
+/* Chat room — gradient bubbles */
+.ml{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.mm{max-width:80%;padding:12px 16px;border-radius:20px;font-size:14px;line-height:1.5;animation:mfa .3s ease}
+@keyframes mfa{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.mm.o{background:var(--s2);border:1px solid var(--bdr);color:var(--w);align-self:flex-start;border-bottom-left-radius:6px}
+.mm.m{background:linear-gradient(135deg,var(--pink),var(--violet));color:#fff;align-self:flex-end;border-bottom-right-radius:6px;box-shadow:0 2px 12px rgba(244,114,182,.2)}
+.mm .sn{font-size:11px;font-weight:600;margin-bottom:3px}
+.mm.o .sn{color:var(--w3)}.mm.m .sn{color:rgba(255,255,255,.5)}
+.inp{display:flex;gap:8px;align-items:center;margin-top:14px;padding:10px 12px;border-radius:var(--pill);background:var(--s1);border:1px solid var(--bdr)}
+.inp input{flex:1;background:transparent;border:0;outline:0;color:var(--w);font-size:14px;font-family:inherit}
+.inp button{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--violet));border:0;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700}
+
+/* =========== ME =========== */
+.pf{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.pf .pa{
+  width:56px;height:56px;border-radius:50%;
+  background:linear-gradient(135deg,var(--pink),var(--violet),var(--cyan));
+  display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px;color:#fff;
+  box-shadow:0 4px 18px rgba(167,139,250,.2);
+}
+.pf .pm{font-size:18px;font-weight:700;color:var(--w)}
+.pf .pp{font-size:12px;color:var(--w2);margin-top:2px}
+.sg{border-radius:var(--r);overflow:hidden;margin-bottom:10px}
+.sr{display:flex;align-items:center;gap:12px;padding:14px;background:var(--s1);border-bottom:1px solid var(--bdr);cursor:pointer;transition:.2s}
+.sr:last-child{border-bottom:0}
+.sr:active{background:var(--s2)}
+.sr .si{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sr .sl{font-size:14px;font-weight:500;color:var(--w);flex:1}
+.sr .ch{color:var(--w3);font-size:15px}
+
+/* Detail */
+.dh{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.bk{width:34px;height:34px;border-radius:11px;background:var(--s1);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--w);font-size:16px;flex-shrink:0}
+.bk:active{background:var(--s2)}
+.dh h2{font-size:20px;font-weight:700;color:var(--w)}
+.dc{border-radius:var(--rl);padding:18px;background:var(--s1);border:1px solid var(--bdr);margin-bottom:10px;position:relative;overflow:hidden}
+.dc::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(244,114,182,.15),rgba(34,211,238,.1),transparent)}
+
+.lnk{position:absolute;top:8px;right:14px;font-size:12px;color:var(--w3);text-decoration:none;z-index:40}
+</style>
+</head>
+<body>
+
+<div class="dev">
+  <div class="bar"><div class="notch"></div><span class="tm">9:41</span></div>
+
+  <div id="splash">
+    <div class="slogo"><div class="o1"></div><div class="o2"></div><div class="o3"></div><span class="cc">C</span></div>
+    <div class="stit">CineTrack</div>
+    <div class="ssub">VFX Production Suite</div>
+    <div class="sbar"><div></div></div>
+  </div>
+
+  <a class="lnk" href="./index.html">← All</a>
+
+  <div class="stk">
+
+    <!-- HOME -->
+    <div class="v a" id="home">
+      <div class="hdr">
+        <div><div class="g">Good morning,</div><div class="n">Alex</div></div>
+        <div class="av" onclick="go('me')">A</div>
+      </div>
+
+      <div class="tmr" onclick="go('work')">
+        <div class="mesh"></div>
+        <div class="glow"></div>
+        <div class="inner">
+          <div class="tag"><span class="pd"></span><span class="txt">RECORDING</span></div>
+          <div class="num">01:42:17</div>
+          <div class="info">SH_220 · Compositing · Roto cleanup</div>
+        </div>
+      </div>
+
+      <div class="ms">
+        <div class="mc"><div class="mv">5.2h</div><div class="mk">Today</div></div>
+        <div class="mc"><div class="mv">3</div><div class="mk">Queue</div></div>
+        <div class="mc"><div class="mv">92%</div><div class="mk">Score</div></div>
+      </div>
+
+      <div class="lb" style="margin-top:18px">Shots</div>
+      <div class="hs">
+        <div class="sc" onclick="go('shot')"><div class="code">SH_221</div><div class="dept">FX · Debris</div><div class="stag" style="background:rgba(244,114,182,.12);color:var(--pink)">Due 3PM</div></div>
+        <div class="sc" onclick="go('shot')"><div class="code">SH_125</div><div class="dept">Comp · Fix</div><div class="stag" style="background:rgba(52,211,153,.12);color:var(--green)">On Track</div></div>
+        <div class="sc"><div class="code">SH_118</div><div class="dept">Light · Final</div><div class="stag" style="background:rgba(167,139,250,.12);color:var(--violet)">Tomorrow</div></div>
+      </div>
+
+      <div class="lb" style="margin-top:18px">Quick Actions</div>
+      <div class="qg">
+        <div class="qc" onclick="go('work')"><div class="qi" style="background:rgba(244,114,182,.1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><span>Log</span></div>
+        <div class="qc"><div class="qi" style="background:rgba(96,165,250,.1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><span>Leave</span></div>
+        <div class="qc"><div class="qi" style="background:rgba(52,211,153,.1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6"/></svg></div><span>Focus</span></div>
+        <div class="qc"><div class="qi" style="background:rgba(251,191,36,.1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg></div><span>Expense</span></div>
+      </div>
+    </div>
+
+    <!-- WORK -->
+    <div class="v f" id="work">
+      <h2 style="font-size:24px;font-weight:800;letter-spacing:-.4px;color:var(--w);margin-bottom:14px">Timesheet</h2>
+      <div class="lb">February 2026</div>
+      <div class="wstrip">
+        <div class="wday"><div class="wd">Mo</div><div class="wn">23</div></div>
+        <div class="wday"><div class="wd">Tu</div><div class="wn">24</div></div>
+        <div class="wday"><div class="wd">We</div><div class="wn">25</div></div>
+        <div class="wday now"><div class="wd">Th</div><div class="wn">26</div></div>
+        <div class="wday"><div class="wd">Fr</div><div class="wn">27</div></div>
+        <div class="wday"><div class="wd">Sa</div><div class="wn">28</div></div>
+      </div>
+      <div class="lb" style="margin-top:14px">Quick Hours</div>
+      <div class="hchips">
+        <div class="hchip">0.5h</div><div class="hchip">1h</div><div class="hchip on">2h</div><div class="hchip">4h</div><div class="hchip">8h</div>
+      </div>
+      <div class="lb">Entries</div>
+      <div class="erow" onclick="go('shot')"><div class="eh">2.5h</div><div><div class="ep">SH_220 · Compositing</div><div class="en">Roto cleanup + edge blend</div></div></div>
+      <div class="erow"><div class="eh">1.5h</div><div><div class="ep">SH_221 · FX Debris</div><div class="en">Particle sim v2</div></div></div>
+      <div class="erow"><div class="eh">1.0h</div><div><div class="ep">SH_125 · Client Fix</div><div class="en">Color grade tweak</div></div></div>
+      <button class="bt p" style="margin-top:16px">+ Log New Entry</button>
+    </div>
+
+    <!-- CHAT -->
+    <div class="v f" id="chat">
+      <h2 style="font-size:24px;font-weight:800;letter-spacing:-.4px;color:var(--w);margin-bottom:4px">Messages</h2>
+      <div style="font-size:12px;color:var(--w3);margin-bottom:14px">4 conversations</div>
+      <div class="cr" onclick="go('chatroom')"><div class="cra" style="background:linear-gradient(135deg,var(--pink),var(--violet))">P</div><div style="flex:1;min-width:0"><div class="cn">Project Alpha</div><div class="cp">Lead: "Lens flare softer"</div></div><div class="ub">3</div></div>
+      <div class="cr" onclick="go('chatroom')"><div class="cra" style="background:linear-gradient(135deg,var(--amber),var(--red))">S</div><div style="flex:1;min-width:0"><div class="cn">Sarah · Supervisor</div><div class="cp">Leave approved</div></div><div class="ct">2m</div></div>
+      <div class="cr" onclick="go('chatroom')"><div class="cra" style="background:linear-gradient(135deg,var(--green),var(--cyan))">T</div><div style="flex:1;min-width:0"><div class="cn">Team FX</div><div class="cp">"Render farm back online"</div></div><div class="ct">15m</div></div>
+      <div class="cr"><div class="cra" style="background:var(--s2);color:var(--w3)">G</div><div style="flex:1;min-width:0"><div class="cn">General</div><div class="cp">Standup notes</div></div><div class="ct">1h</div></div>
+    </div>
+
+    <!-- CHAT ROOM -->
+    <div class="v f" id="chatroom">
+      <div class="dh"><div class="bk" onclick="bk()">←</div><h2>Project Alpha</h2></div>
+      <div class="ml">
+        <div class="mm o"><div class="sn">Lead</div>Need the lens flare softer by 20%.</div>
+        <div class="mm m"><div class="sn">You</div>Updated pass sent for review.</div>
+        <div class="mm o"><div class="sn">Producer</div>Approved. Final export proceed.</div>
+        <div class="mm m"><div class="sn">You</div>Rendering now. ETA 40 min.</div>
+        <div class="mm o"><div class="sn">Lead</div>Great work. Let's wrap this sequence.</div>
+      </div>
+      <div class="inp"><input placeholder="Type a message..."/><button>↑</button></div>
+    </div>
+
+    <!-- ME -->
+    <div class="v f" id="me">
+      <h2 style="font-size:24px;font-weight:800;letter-spacing:-.4px;color:var(--w);margin-bottom:16px">Profile</h2>
+      <div class="pf">
+        <div class="pa">AK</div>
+        <div><div class="pm">Alex Kumar</div><div class="pp">Senior Compositor · Team Alpha</div></div>
+      </div>
+      <div class="lb">Settings</div>
+      <div class="sg">
+        <div class="sr"><div class="si" style="background:rgba(244,114,182,.1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><span class="sl">Edit Profile</span><span class="ch">›</span></div>
+        <div class="sr"><div class="si" style="background:rgba(96,165,250,.1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div><span class="sl">Notifications</span><span class="ch">›</span></div>
+        <div class="sr"><div class="si" style="background:rgba(52,211,153,.1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div><span class="sl">Location</span><span class="ch">›</span></div>
+      </div>
+      <div class="lb">Account</div>
+      <div class="sg">
+        <div class="sr"><div class="si" style="background:rgba(251,113,133,.1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg></div><span class="sl" style="color:var(--red)">Sign Out</span><span class="ch">›</span></div>
+      </div>
+    </div>
+
+    <!-- SHOT -->
+    <div class="v f" id="shot">
+      <div class="dh"><div class="bk" onclick="bk()">←</div><h2>SH_221</h2></div>
+      <div class="dc">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:.08em;background:linear-gradient(90deg,var(--pink),var(--violet));-webkit-background-clip:text;-webkit-text-fill-color:transparent">FX DEPARTMENT</div>
+            <div style="font-size:18px;font-weight:700;color:var(--w);margin-top:4px">Debris Pass</div>
+          </div>
+          <div style="padding:4px 10px;border-radius:var(--pill);background:rgba(52,211,153,.1);font-size:11px;font-weight:600;color:var(--green)">In Progress</div>
+        </div>
+        <div style="display:flex;gap:20px;margin-top:14px">
+          <div><div style="font-size:10px;color:var(--w3)">BID</div><div style="font-size:15px;font-weight:700;color:var(--w)">4.0h</div></div>
+          <div><div style="font-size:10px;color:var(--w3)">ACTUAL</div><div style="font-size:15px;font-weight:700;color:var(--pink)">3.2h</div></div>
+          <div><div style="font-size:10px;color:var(--w3)">DUE</div><div style="font-size:15px;font-weight:700;color:var(--w)">3 PM</div></div>
+        </div>
+      </div>
+      <div class="lb">Activity</div>
+      <div class="erow"><div style="font-size:12px;color:var(--w3);min-width:50px">10:20</div><div><div class="ep">Particle sim v2 started</div></div></div>
+      <div class="erow"><div style="font-size:12px;color:var(--w3);min-width:50px">11:45</div><div><div class="ep">Cache rendered — 340 frames</div></div></div>
+      <button class="bt p" style="margin-top:14px">Log Time</button>
+    </div>
+
+  </div>
+
+  <nav class="dock">
+    <div class="dt a" onclick="tab('home',this)"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></div>
+    <div class="dt" onclick="tab('work',this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Work</span></div>
+    <div class="dt" onclick="tab('chat',this)"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span>Chat</span></div>
+    <div class="dt" onclick="tab('me',this)"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Me</span></div>
+  </nav>
+</div>
+
+<script>
+const M=['home','work','chat','me'];let H=['home'],C='home';
+setTimeout(()=>document.getElementById('splash').classList.add('x'),2200);
+function show(id,d){document.querySelectorAll('.v').forEach(p=>{if(p.id===id)p.className='v a';else if(d==='f')p.className=p.id===C?'v h':'v f';else p.className=p.id===C?'v f':'v h'});C=id}
+function tab(id,el){document.querySelectorAll('.dt').forEach(t=>t.classList.remove('a'));el.classList.add('a');show(id,M.indexOf(id)>=M.indexOf(C)?'f':'b');H=[id]}
+function go(id){H.push(id);show(id,'f');if(!M.includes(id))document.querySelectorAll('.dt').forEach(t=>t.classList.remove('a'))}
+function bk(){H.pop();const p=H[H.length-1]||'home';show(p,'b');if(M.includes(p))document.querySelectorAll('.dt').forEach((t,i)=>t.classList.toggle('a',M[i]===p))}
+</script>
+</body>
+</html>

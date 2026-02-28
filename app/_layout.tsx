@@ -3,13 +3,14 @@ import { QueryClient } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { setupOnlineManager } from '../lib/online-manager';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { Session } from '@supabase/supabase-js';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { SplashScreen } from '../components/SplashScreen';
-import { OfflineIndicator } from '../components/OfflineIndicator';
+import { OfflineBanner } from '../components/OfflineBanner';
 import { TimerProvider } from '../contexts/TimerContext';
 import { FocusTimerProvider } from '../contexts/FocusTimerContext';
 import { useOfflineFlush } from '../lib/use-offline-flush';
@@ -17,12 +18,17 @@ import { PushTokenRegistration } from '../lib/push-token-registration';
 import { LocationTrackingManager } from '../lib/location-tracking-manager';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { validateEnv } from '../lib/env-validation';
+import { NotificationSoundListener } from '../lib/notification-sound-listener';
 import { colors } from '../constants/colors';
+
+setupOnlineManager();
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       gcTime: 1000 * 60 * 60 * 24,
+      retry: 2,
+      networkMode: 'offlineFirst',
     },
   },
 });
@@ -93,10 +99,11 @@ export default function RootLayout() {
         persistOptions={{ persister: asyncStoragePersister }}
       >
         <PushTokenRegistration session={session} />
+        <NotificationSoundListener />
         <LocationTrackingManager session={session} />
         <OfflineFlushListener />
         <View style={{ flex: 1 }}>
-          <OfflineIndicator />
+          <OfflineBanner />
           <TimerProvider>
             <FocusTimerProvider>
             <Stack
@@ -142,6 +149,10 @@ export default function RootLayout() {
                 options={{ title: 'Leaves', headerShown: false }}
               />
               <Stack.Screen
+                name="leaves/new"
+                options={{ title: 'Apply Leave', headerShown: false }}
+              />
+              <Stack.Screen
                 name="expenses/index"
                 options={{ title: 'Expenses', headerShown: false }}
               />
@@ -159,6 +170,10 @@ export default function RootLayout() {
               />
               <Stack.Screen
                 name="reminders/index"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="settings"
                 options={{ headerShown: false }}
               />
               <Stack.Screen

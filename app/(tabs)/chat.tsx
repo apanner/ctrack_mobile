@@ -6,15 +6,26 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  TextInput,
+  SectionList,
 } from 'react-native';
 import { router } from 'expo-router';
-import { MessageCircle, Search } from 'lucide-react-native';
+import { MessageCircle, Search, UserPlus } from 'lucide-react-native';
 import { formatDistanceToNow } from 'date-fns';
-import { useChatRooms, type ChatRoomWithMeta } from '../../lib/api/chat';
+import { useState, useMemo } from 'react';
+import {
+  useChatRooms,
+  useChatUsers,
+  useCreateChatRoom,
+  type ChatRoomWithMeta,
+  type ChatUser,
+} from '../../lib/api/chat';
+import { useCurrentUser } from '../../lib/api/profile';
 import { colors } from '../../constants/colors';
 import { GlassCard } from '../../components/GlassCard';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { uiTokens } from '../../constants/ui-tokens';
+import { LinearGradient } from 'expo-linear-gradient';
 
 function RoomItem({ room }: { room: ChatRoomWithMeta }) {
   const preview = room.last_message?.content
@@ -75,14 +86,108 @@ function RoomItem({ room }: { room: ChatRoomWithMeta }) {
   );
 }
 
-export default function ChatScreen() {
-  const { data: rooms = [], isLoading, error, refetch, isRefetching } = useChatRooms();
+function UserItem({
+  user,
+  onCreateAndOpen,
+  isCreating,
+}: {
+  user: ChatUser;
+  onCreateAndOpen: (userId: string) => void;
+  isCreating: boolean;
+}) {
+  const handlePress = () => {
+    if (!isCreating) onCreateAndOpen(user.id);
+  };
 
-  if (isLoading) {
+  return (
+    <TouchableOpacity
+      style={styles.userItemWrap}
+      onPress={handlePress}
+      activeOpacity={0.7}
+      disabled={isCreating}
+      accessibilityRole="button"
+      accessibilityLabel={`Chat with ${user.full_name || 'User'}`}
+    >
+      <GlassCard noPadding>
+        <View style={styles.userItem}>
+          <View style={styles.userAvatar}>
+            <LinearGradient
+              colors={[colors.cyan, colors.purple]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.userAvatarGradient}
+            >
+              <Text style={styles.userAvatarText}>
+                {(user.full_name || 'U').charAt(0).toUpperCase()}
+              </Text>
+            </LinearGradient>
+          </View>
+          <Text style={styles.userName} numberOfLines={1}>
+            {user.full_name || 'Unknown'}
+          </Text>
+          {isCreating ? (
+            <ActivityIndicator size="small" color={colors.accent} style={styles.userLoader} />
+          ) : (
+            <UserPlus size={18} color={colors.textTertiary} />
+          )}
+        </View>
+      </GlassCard>
+    </TouchableOpacity>
+  );
+}
+
+export default function ChatScreen() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const { data: currentUser } = useCurrentUser();
+  const { data: rooms = [], isLoading: roomsLoading, error, refetch, isRefetching } = useChatRooms();
+  const { data: users = [], isLoading: usersLoading } = useChatUsers();
+  const createRoom = useCreateChatRoom();
+  const [creatingForUserId, setCreatingForUserId] = useState<string | null>(null);
+
+  const filteredUsers = useMemo(() => {
+    if (!searchQuery.trim()) return users;
+    const q = searchQuery.toLowerCase().trim();
+    return users.filter(
+      (u) =>
+        (u.full_name ?? '').toLowerCase().includes(q) ||
+        (u.id ?? '').toLowerCase().includes(q)
+    );
+  }, [users, searchQuery]);
+
+  const handleCreateAndOpen = async (otherUserId: string) => {
+    if (!currentUser?.id || createRoom.isPending) return;
+    setCreatingForUserId(otherUserId);
+    try {
+      const room = await createRoom.mutateAsync({
+        type: 'direct',
+        otherUserId,
+      });
+      router.push(`/chat/${room.id}`);
+    } catch (err) {
+      console.error('Failed to create chat:', err);
+      // Could show toast
+    } finally {
+      setCreatingForUserId(null);
+    }
+  };
+
+  const sections = useMemo(() => {
+    const result: { title: string; data: (ChatRoomWithMeta | ChatUser)[] }[] = [];
+    if (rooms.length > 0) {
+      result.push({ title: 'Recent chats', data: rooms });
+    }
+    result.push({
+      title: 'Start new chat',
+      data: filteredUsers,
+    });
+    return result;
+  }, [rooms, filteredUsers]);
+
+  if (roomsLoading) {
     return (
       <ScreenContainer>
         <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.accent} />
+          <ActivityIndicator size="large" color={colors.accent} />
         </View>
       </ScreenContainer>
     );
@@ -92,24 +197,47 @@ export default function ChatScreen() {
     <ScreenContainer>
       <View style={styles.header}>
         <Text style={styles.title}>Chat</Text>
-        <Text style={styles.subtitle}>Conversations</Text>
+        <Text style={styles.subtitle}>Message your team</Text>
       </View>
-      <View style={styles.searchHint}>
-        <Search size={14} color={colors.textTertiary} />
-        <Text style={styles.searchHintText}>Recent rooms and direct messages</Text>
+
+      <View style={styles.searchWrap}>
+        <Search size={18} color={colors.textTertiary} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search users..."
+          placeholderTextColor={colors.textTertiary}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          returnKeyType="search"
+        />
       </View>
 
       {error ? (
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Failed to load rooms. Pull to retry.</Text>
+          <Text style={styles.errorText}>Failed to load. Pull to retry.</Text>
         </View>
       ) : (
-        <FlatList
-          data={rooms}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <RoomItem room={item} />}
+        <SectionList
+          sections={sections}
+          keyExtractor={(item) => (item as { id: string }).id}
+          renderItem={({ item, section }) => {
+            if (section.title === 'Recent chats') {
+              return <RoomItem room={item as ChatRoomWithMeta} />;
+            }
+            return (
+              <UserItem
+                user={item as ChatUser}
+                onCreateAndOpen={handleCreateAndOpen}
+                isCreating={createRoom.isPending && creatingForUserId === (item as ChatUser).id}
+              />
+            );
+          }}
+          renderSectionHeader={({ section }) => (
+            <Text style={styles.sectionTitle}>{section.title}</Text>
+          )}
           contentContainerStyle={styles.listContent}
           ItemSeparatorComponent={() => <View style={{ height: uiTokens.spacing.sm }} />}
+          SectionSeparatorComponent={() => <View style={{ height: uiTokens.spacing.lg }} />}
           refreshControl={
             <RefreshControl
               refreshing={isRefetching}
@@ -118,14 +246,19 @@ export default function ChatScreen() {
             />
           }
           ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <MessageCircle size={48} color={colors.textTertiary} />
-              <Text style={styles.emptyText}>No chats yet</Text>
-              <Text style={styles.emptySubtext}>
-                Start a direct message or join a project chat
-              </Text>
-            </View>
+            usersLoading ? (
+              <View style={styles.emptyContainer}>
+                <ActivityIndicator size="small" color={colors.accent} />
+              </View>
+            ) : (
+              <View style={styles.emptyContainer}>
+                <MessageCircle size={48} color={colors.textTertiary} />
+                <Text style={styles.emptyText}>No users found</Text>
+                <Text style={styles.emptySubtext}>Team members will appear here</Text>
+              </View>
+            )
           }
+          stickySectionHeadersEnabled={false}
         />
       )}
     </ScreenContainer>
@@ -154,22 +287,36 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: 2,
   },
-  searchHint: {
-    marginHorizontal: uiTokens.spacing.xl,
-    marginBottom: uiTokens.spacing.md,
+  searchWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: uiTokens.spacing.sm,
+    marginHorizontal: uiTokens.spacing.xl,
+    marginBottom: uiTokens.spacing.md,
     paddingHorizontal: uiTokens.spacing.md,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  searchHintText: {
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: colors.text,
+    paddingVertical: 4,
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.08,
     color: colors.textTertiary,
-    fontSize: uiTokens.text.caption,
+    textTransform: 'uppercase',
+    marginBottom: 8,
   },
   listContent: {
     paddingHorizontal: uiTokens.spacing.xl,
     paddingBottom: uiTokens.spacing.xxxl,
-    gap: uiTokens.spacing.sm,
   },
   roomItemWrap: {},
   roomItem: {
@@ -229,6 +376,39 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  userItemWrap: {},
+  userItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: uiTokens.spacing.md,
+    paddingVertical: uiTokens.spacing.md,
+  },
+  userAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    overflow: 'hidden',
+    marginRight: uiTokens.spacing.md,
+  },
+  userAvatarGradient: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  userAvatarText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#000',
+  },
+  userName: {
+    flex: 1,
+    fontSize: uiTokens.text.bodyLg,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  userLoader: {
+    marginLeft: 8,
   },
   errorContainer: {
     flex: 1,

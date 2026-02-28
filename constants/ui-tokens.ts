@@ -14,7 +14,8 @@ export const uiTokens = {
     sm: 10,
     md: 14,
     lg: 18,
-    xl: 24,
+    xl: 20,
+    xlLarge: 28, // design-d --r-lg
     pill: 999,
   },
   text: {
@@ -30,7 +31,7 @@ export const uiTokens = {
     lg: 24,
   },
   surface: {
-    glassBackground: 'rgba(24,24,27,0.46)',
+    glassBackground: 'rgba(16,16,22,0.88)',
     glassBorder: colors.border,
     elevatedShadowOpacity: 0.28,
     elevatedShadowRadius: 14,

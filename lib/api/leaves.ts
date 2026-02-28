@@ -73,3 +73,6 @@ export function useSubmitLeave() {
     },
   });
 }
+
+/** Alias for useSubmitLeave - use when creating a new leave. */
+export const useCreateLeave = useSubmitLeave;

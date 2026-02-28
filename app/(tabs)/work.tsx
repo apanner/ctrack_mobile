@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -6,25 +6,48 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
+  Pressable,
+  Modal,
+  FlatList,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams } from 'expo-router';
 import { useShots } from '../../lib/api/shots';
 import { useProjects } from '../../lib/api/projects';
 import { useCurrentUser } from '../../lib/api/profile';
-import { useTimesheets, useCreateTimeLog } from '../../lib/api/timesheets';
+import {
+  useTimesheets,
+  useCreateTimeLog,
+  useCopyDayToDay,
+  useWeekStatus,
+  useSubmitWeek,
+  useWeeklyReport,
+  getWeekStart,
+  type TimeLog,
+  type EntryType,
+} from '../../lib/api/timesheets';
+import { useOfflineQueue, filterQueueByDate } from '../../lib/offline-queue';
 import { useAdaptiveLayout } from '../../lib/adaptive-layout';
 import { TabControl } from '../../components/TabControl';
 import { GlassCard } from '../../components/GlassCard';
 import { ShotTaskCard } from '../../components/ShotTaskCard';
 import { BrandSpinner } from '../../components/BrandSpinner';
+import type { SelectOption } from '../../components/SelectDropdown';
 import { colors } from '../../constants/colors';
 import { router } from 'expo-router';
-import { Calendar, Clock, ChevronDown, Sparkles } from 'lucide-react-native';
+import { Calendar, Clock, ChevronDown, Sparkles, CheckCircle } from 'lucide-react-native';
 import { format, addDays, subDays } from 'date-fns';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { SectionHeader } from '../../components/ui/SectionHeader';
 import { PrimaryActionButton } from '../../components/ui/PrimaryActionButton';
 import { uiTokens } from '../../constants/ui-tokens';
+
+const ENTRY_TYPES: { value: EntryType; label: string }[] = [
+  { value: 'work', label: 'Work' },
+  { value: 'training', label: 'Training' },
+  { value: 'downtime', label: 'Downtime' },
+  { value: 'power_outage', label: 'Power Outage' },
+];
 
 export default function WorkScreen() {
   const params = useLocalSearchParams<{ focusHours?: string; taskId?: string; shotId?: string }>();
@@ -33,9 +56,14 @@ export default function WorkScreen() {
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [projectId, setProjectId] = useState<string | null>(null);
   const [shotId, setShotId] = useState<string | null>(params.shotId ?? null);
+  const [entryType, setEntryType] = useState<EntryType>('work');
   const [hoursInput, setHoursInput] = useState(params.focusHours ?? '');
   const [notesInput, setNotesInput] = useState('');
+  const [projectModalOpen, setProjectModalOpen] = useState(false);
+  const [shotModalOpen, setShotModalOpen] = useState(false);
   const quickHourPresets = ['0.5', '1', '2', '4', '8'];
+
+  const weekStart = useMemo(() => getWeekStart(selectedDate), [selectedDate]);
 
   useEffect(() => {
     if (params.focusHours) {
@@ -48,21 +76,76 @@ export default function WorkScreen() {
   const { data: user } = useCurrentUser();
   const { data: projects = [] } = useProjects();
   const { data: shots = [], isLoading: shotsLoading } = useShots(
-    projectId
-      ? { project_id: projectId }
-      : user?.role === 'artist'
-        ? { artist_id: user?.id }
-        : undefined
+    projectId ? { project_id: projectId } : user?.role === 'artist' ? { artist_id: user?.id } : undefined
   );
-  const { data: timesheetsData } = useTimesheets(
-    selectedDate,
-    selectedDate
-  );
+  const { data: timesheetsData } = useTimesheets(selectedDate, selectedDate);
   const createTimeLog = useCreateTimeLog();
+  const copyDayToDay = useCopyDayToDay();
+  const { data: weekStatus } = useWeekStatus(weekStart);
+  const submitWeek = useSubmitWeek();
+  const { data: weeklyReport } = useWeeklyReport(weekStart);
+  const { data: offlineQueue = [] } = useOfflineQueue();
+
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
+  const yesterdayStr = format(subDays(new Date(), 1), 'yyyy-MM-dd');
+  const { data: yesterdayData } = useTimesheets(
+    selectedDate === todayStr ? yesterdayStr : selectedDate,
+    selectedDate === todayStr ? yesterdayStr : selectedDate
+  );
+  const yesterdayEntries = (selectedDate === todayStr ? yesterdayData?.data ?? [] : []) as TimeLog[];
+
+  const queuedForDate = useMemo(
+    () =>
+      filterQueueByDate(offlineQueue, selectedDate).map((q) => ({
+        id: q.id,
+        work_date: q.payload.workDate,
+        hours_worked: q.payload.hoursWorked,
+        project_id: q.payload.projectId ?? null,
+        shot_id: q.payload.shotId ?? null,
+        task_id: q.payload.taskId ?? null,
+        notes: q.payload.notes ?? null,
+        entry_type: (q.payload.entryType ?? 'work') as EntryType,
+        _pending: true,
+      })),
+    [offlineQueue, selectedDate]
+  );
+  const displayedLogs = useMemo(() => {
+    const server = (timesheetsData?.data ?? []).filter((t) => t.work_date === selectedDate);
+    const serverIds = new Set(server.map((s) => s.id));
+    const fromQueue = queuedForDate.filter((q) => !serverIds.has(q.id));
+    return [...server, ...fromQueue];
+  }, [timesheetsData?.data, selectedDate, queuedForDate]);
 
   const isArtist = user?.role === 'artist';
   const myShots = isArtist ? shots.filter((s) => s.artist_id === user?.id) : shots;
   const projectShots = projectId ? shots.filter((s) => s.project_id === projectId) : myShots;
+
+  const isWeekLocked = weekStatus?.submitted ?? false;
+  const showProjectShot = entryType === 'work' || entryType === 'training';
+  const forceNoProjectShot = entryType === 'downtime' || entryType === 'power_outage';
+
+  useEffect(() => {
+    if (forceNoProjectShot) {
+      setProjectId(null);
+      setShotId(null);
+    }
+  }, [forceNoProjectShot]);
+
+  const projectOptions: SelectOption<string | null>[] = useMemo(
+    () => [
+      { value: null, label: 'General / Non-billable' },
+      ...projects.map((p) => ({ value: p.id, label: `${p.code} – ${p.name}` })),
+    ],
+    [projects]
+  );
+
+  const shotOptions: SelectOption<string | null>[] = useMemo(() => {
+    if (!projectId) return [{ value: null, label: 'None' }];
+    return [
+      { value: null, label: 'None' },
+      ...projectShots.map((s) => ({ value: s.id, label: s.shot_code })),
+    ];
+  }, [projectId, projectShots]);
 
   const today = new Date();
   const selectedDateObj = new Date(selectedDate);
@@ -76,20 +159,42 @@ export default function WorkScreen() {
   const handleSaveTimesheet = async () => {
     const hours = parseFloat(hoursInput);
     if (!hours || hours <= 0) return;
+    if (isWeekLocked) return;
     try {
       await createTimeLog.mutateAsync({
         workDate: selectedDate,
-        projectId: projectId ?? undefined,
-        shotId: shotId ?? undefined,
+        projectId: forceNoProjectShot ? null : (projectId ?? undefined),
+        shotId: forceNoProjectShot ? null : (shotId ?? undefined),
         taskId: params.taskId ?? undefined,
         hoursWorked: hours,
         notes: notesInput || undefined,
+        entryType,
       });
       setHoursInput('');
       setNotesInput('');
     } catch (e) {
       console.error('Save timesheet failed:', e);
     }
+  };
+
+  const handleSubmitWeek = async () => {
+    if (isWeekLocked) return;
+    try {
+      await submitWeek.mutateAsync(weekStart);
+    } catch (e) {
+      console.error('Submit week failed:', e);
+    }
+  };
+
+  const handleProjectSelect = (id: string | null) => {
+    setProjectId(id);
+    setShotId(null);
+    setProjectModalOpen(false);
+  };
+
+  const handleShotSelect = (id: string | null) => {
+    setShotId(id);
+    setShotModalOpen(false);
   };
 
   if (shotsLoading && segment === 'Tasks') {
@@ -118,6 +223,53 @@ export default function WorkScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: spacing.xxl * 4 }}
         >
+          {/* Week status banner */}
+          <View style={[styles.section, { paddingHorizontal: spacing.lg }]}>
+            {isWeekLocked ? (
+              <GlassCard leftBorderColor="green">
+                <View style={styles.weekSubmittedRow}>
+                  <CheckCircle size={20} color={colors.success} />
+                  <Text style={styles.weekSubmittedText}>Week submitted ✓</Text>
+                </View>
+              </GlassCard>
+            ) : (
+              <View style={styles.submitWeekRow}>
+                <GlassCard style={{ flex: 1 }}>
+                  <Text style={styles.weekLabel}>
+                    Week of {format(new Date(weekStart), 'MMM d')}
+                  </Text>
+                  <PrimaryActionButton
+                    label="Submit Week"
+                    onPress={handleSubmitWeek}
+                    loading={submitWeek.isPending}
+                  />
+                </GlassCard>
+              </View>
+            )}
+          </View>
+
+          {/* Weekly report summary */}
+          {weeklyReport && (weeklyReport.totalHours > 0 || isWeekLocked) && (
+            <View style={[styles.section, { paddingHorizontal: spacing.lg }]}>
+              <SectionHeader title="Week Summary" />
+              <GlassCard>
+                <View style={styles.reportRow}>
+                  <Text style={styles.reportLabel}>Total hours</Text>
+                  <Text style={styles.reportValue}>{weeklyReport.totalHours.toFixed(1)}h</Text>
+                </View>
+                {weeklyReport.byEntryType.length > 0 && (
+                  <View style={styles.reportBreakdown}>
+                    {weeklyReport.byEntryType.map(({ type, hours }) => (
+                      <Text key={type} style={styles.reportBreakdownText}>
+                        {type}: {hours.toFixed(1)}h
+                      </Text>
+                    ))}
+                  </View>
+                )}
+              </GlassCard>
+            </View>
+          )}
+
           <View style={[styles.section, { paddingHorizontal: spacing.lg }]}>
             <GlassCard>
               <View style={styles.heroWrap}>
@@ -154,114 +306,214 @@ export default function WorkScreen() {
                 <Text style={styles.dayNavText}>→</Text>
               </TouchableOpacity>
             </View>
-          </View>
-
-          <View style={[styles.section, { paddingHorizontal: spacing.lg }]}>
-            <SectionHeader title="2. Choose Project" />
-            <View style={styles.picker}>
-              <Text style={styles.pickerText}>
-                {projectId
-                  ? projects.find((p) => p.id === projectId)?.name ?? 'Select'
-                  : 'Any / General'}
-              </Text>
-              <ChevronDown size={18} color={colors.textSecondary} />
-            </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
-              <TouchableOpacity
-                style={[styles.chip, !projectId && styles.chipActive]}
-                onPress={() => setProjectId(null)}
-              >
-                <Text style={[styles.chipText, !projectId && styles.chipTextActive]}>Any</Text>
-              </TouchableOpacity>
-              {projects.slice(0, 6).map((p) => (
+            {/* Copy Yesterday — only when today selected, week not locked, yesterday has entries */}
+            {selectedDate === todayStr &&
+              !isWeekLocked &&
+              yesterdayEntries.length > 0 && (
                 <TouchableOpacity
-                  key={p.id}
-                  style={[styles.chip, projectId === p.id && styles.chipActive]}
-                  onPress={() => {
-                    setProjectId(p.id);
-                    setShotId(null);
-                  }}
+                  style={styles.copyYesterdayBtn}
+                  onPress={() =>
+                    copyDayToDay.mutate({
+                      toDate: selectedDate,
+                      entries: yesterdayEntries,
+                    })
+                  }
+                  disabled={copyDayToDay.isPending}
                 >
-                  <Text style={[styles.chipText, projectId === p.id && styles.chipTextActive]}>
-                    {p.code}
+                  <Text style={styles.copyYesterdayText}>
+                    {copyDayToDay.isPending
+                      ? 'Copying…'
+                      : `Copy yesterday (${yesterdayEntries.length} entries)`}
                   </Text>
                 </TouchableOpacity>
-              ))}
-            </ScrollView>
+              )}
           </View>
 
+          {/* Entry type */}
           <View style={[styles.section, { paddingHorizontal: spacing.lg }]}>
-            <SectionHeader title="3. Select Shot (Optional)" />
-            <View style={styles.picker}>
-              <Text style={styles.pickerText}>
-                {shotId
-                  ? projectShots.find((s) => s.id === shotId)?.shot_code ?? 'Select'
-                  : 'Optional'}
-              </Text>
-              <ChevronDown size={18} color={colors.textSecondary} />
+            <SectionHeader title="2. Entry Type" />
+            <View style={styles.entryTypeRow}>
+              {ENTRY_TYPES.map(({ value, label }) => {
+                const isActive = entryType === value;
+                return (
+                  <Pressable
+                    key={value}
+                    style={[styles.entryTypeChip, isActive && styles.entryTypeChipActive]}
+                    onPress={() => !isWeekLocked && setEntryType(value)}
+                    disabled={isWeekLocked}
+                  >
+                    {isActive ? (
+                      <LinearGradient
+                        colors={[colors.accent, colors.purple]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.entryTypeGradient}
+                      >
+                        <Text style={styles.entryTypeTextActive}>{label}</Text>
+                      </LinearGradient>
+                    ) : (
+                      <Text style={styles.entryTypeText}>{label}</Text>
+                    )}
+                  </Pressable>
+                );
+              })}
             </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
-              <TouchableOpacity
-                style={[styles.chip, !shotId && styles.chipActive]}
-                onPress={() => setShotId(null)}
-              >
-                <Text style={[styles.chipText, !shotId && styles.chipTextActive]}>None</Text>
-              </TouchableOpacity>
-              {projectShots.slice(0, 8).map((s) => (
-                <TouchableOpacity
-                  key={s.id}
-                  style={[styles.chip, shotId === s.id && styles.chipActive]}
-                  onPress={() => setShotId(s.id)}
-                >
-                  <Text style={[styles.chipText, shotId === s.id && styles.chipTextActive]}>
-                    {s.shot_code}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
           </View>
 
+          {/* Project + Shot dropdowns (only when work or training) */}
+          {showProjectShot && (
+            <>
+              <View style={[styles.section, { paddingHorizontal: spacing.lg }]}>
+                <SectionHeader title="3. Choose Project" />
+                <Pressable
+                  style={[styles.picker, isWeekLocked && styles.pickerDisabled]}
+                  onPress={() => !isWeekLocked && setProjectModalOpen(true)}
+                  disabled={isWeekLocked}
+                >
+                  <Text style={styles.pickerText} numberOfLines={1}>
+                    {projectId
+                      ? projects.find((p) => p.id === projectId)?.name ?? 'Select'
+                      : 'General / Non-billable'}
+                  </Text>
+                  <ChevronDown size={18} color={colors.textSecondary} />
+                </Pressable>
+                <Modal
+                  visible={projectModalOpen}
+                  transparent
+                  animationType="fade"
+                  onRequestClose={() => setProjectModalOpen(false)}
+                >
+                  <Pressable style={styles.modalOverlay} onPress={() => setProjectModalOpen(false)}>
+                    <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+                      <View style={styles.modalHeader}>
+                        <Text style={styles.modalTitle}>Choose Project</Text>
+                        <TouchableOpacity onPress={() => setProjectModalOpen(false)} hitSlop={12}>
+                          <Text style={styles.modalClose}>Done</Text>
+                        </TouchableOpacity>
+                      </View>
+                      <FlatList
+                        data={projectOptions}
+                        keyExtractor={(o) => (o.value == null ? '__none__' : o.value)}
+                        renderItem={({ item }) => (
+                          <TouchableOpacity
+                            style={styles.modalOption}
+                            onPress={() => handleProjectSelect(item.value)}
+                          >
+                            <Text style={styles.modalOptionText}>{item.label}</Text>
+                          </TouchableOpacity>
+                        )}
+                        style={styles.modalList}
+                      />
+                    </Pressable>
+                  </Pressable>
+                </Modal>
+              </View>
+
+              <View style={[styles.section, { paddingHorizontal: spacing.lg }]}>
+                <SectionHeader title="4. Select Shot (Optional)" />
+                <Pressable
+                  style={[styles.picker, isWeekLocked && styles.pickerDisabled]}
+                  onPress={() => !isWeekLocked && setShotModalOpen(true)}
+                  disabled={isWeekLocked}
+                >
+                  <Text style={styles.pickerText} numberOfLines={1}>
+                    {shotId
+                      ? projectShots.find((s) => s.id === shotId)?.shot_code ?? 'Select'
+                      : 'None'}
+                  </Text>
+                  <ChevronDown size={18} color={colors.textSecondary} />
+                </Pressable>
+                <Modal
+                  visible={shotModalOpen}
+                  transparent
+                  animationType="fade"
+                  onRequestClose={() => setShotModalOpen(false)}
+                >
+                  <Pressable style={styles.modalOverlay} onPress={() => setShotModalOpen(false)}>
+                    <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+                      <View style={styles.modalHeader}>
+                        <Text style={styles.modalTitle}>Select Shot</Text>
+                        <TouchableOpacity onPress={() => setShotModalOpen(false)} hitSlop={12}>
+                          <Text style={styles.modalClose}>Done</Text>
+                        </TouchableOpacity>
+                      </View>
+                      <FlatList
+                        data={shotOptions}
+                        keyExtractor={(o) => (o.value == null ? '__none__' : o.value)}
+                        renderItem={({ item }) => (
+                          <TouchableOpacity
+                            style={styles.modalOption}
+                            onPress={() => handleShotSelect(item.value)}
+                          >
+                            <Text style={styles.modalOptionText}>{item.label}</Text>
+                          </TouchableOpacity>
+                        )}
+                        style={styles.modalList}
+                      />
+                    </Pressable>
+                  </Pressable>
+                </Modal>
+              </View>
+            </>
+          )}
+
           <View style={[styles.section, { paddingHorizontal: spacing.lg }]}>
-            <SectionHeader title="4. Add Hours" />
+            <SectionHeader title={showProjectShot ? '5. Add Hours' : '3. Add Hours'} />
             <View style={styles.hoursRow}>
               <Clock size={20} color={colors.textSecondary} />
               <TextInput
-                style={styles.hoursInput}
+                style={[styles.hoursInput, isWeekLocked && styles.inputDisabled]}
                 placeholder="0.0"
                 placeholderTextColor={colors.textTertiary}
                 keyboardType="decimal-pad"
                 value={hoursInput}
                 onChangeText={setHoursInput}
+                editable={!isWeekLocked}
               />
             </View>
             <View style={styles.presetRow}>
               {quickHourPresets.map((value) => {
                 const isActive = hoursInput === value;
                 return (
-                  <TouchableOpacity
+                  <Pressable
                     key={value}
-                    style={[styles.presetChip, isActive && styles.presetChipActive]}
-                    onPress={() => setHoursInput(value)}
-                    activeOpacity={0.85}
+                    onPress={() => !isWeekLocked && setHoursInput(value)}
+                    style={({ pressed }) => [
+                      styles.presetChip,
+                      isActive && styles.presetChipActive,
+                      pressed && !isActive && styles.presetChipPressed,
+                      isWeekLocked && styles.presetChipDisabled,
+                    ]}
+                    disabled={isWeekLocked}
                   >
-                    <Text style={[styles.presetChipText, isActive && styles.presetChipTextActive]}>
-                      {value}h
-                    </Text>
-                  </TouchableOpacity>
+                    {isActive ? (
+                      <LinearGradient
+                        colors={[colors.accent, colors.purple]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.presetChipGradient}
+                      >
+                        <Text style={styles.presetChipTextActive}>{value}h</Text>
+                      </LinearGradient>
+                    ) : (
+                      <Text style={styles.presetChipText}>{value}h</Text>
+                    )}
+                  </Pressable>
                 );
               })}
             </View>
           </View>
 
           <View style={[styles.section, { paddingHorizontal: spacing.lg }]}>
-            <SectionHeader title="5. Notes (Optional)" />
+            <SectionHeader title={showProjectShot ? '6. Notes (Optional)' : '4. Notes (Optional)'} />
             <TextInput
-              style={styles.notesInput}
+              style={[styles.notesInput, isWeekLocked && styles.inputDisabled]}
               placeholder="Add notes..."
               placeholderTextColor={colors.textTertiary}
               value={notesInput}
               onChangeText={setNotesInput}
               multiline
+              editable={!isWeekLocked}
             />
           </View>
 
@@ -269,24 +521,41 @@ export default function WorkScreen() {
             <PrimaryActionButton
               label="Save Time Entry"
               onPress={handleSaveTimesheet}
-              disabled={!hoursInput || parseFloat(hoursInput) <= 0}
+              disabled={
+                isWeekLocked ||
+                !hoursInput ||
+                parseFloat(hoursInput) <= 0
+              }
               loading={createTimeLog.isPending}
             />
           </View>
 
-          {timesheetsData?.data && timesheetsData.data.length > 0 && (
+          {displayedLogs.length > 0 && (
             <View style={[styles.section, { paddingHorizontal: spacing.lg }]}>
               <Text style={styles.sectionLabel}>Today&apos;s logs</Text>
-              {timesheetsData.data
-                .filter((t) => t.work_date === selectedDate)
-                .map((t) => (
-                  <GlassCard key={t.id} style={{ marginBottom: spacing.sm }}>
+              {displayedLogs.map((t, i) => {
+                const borderColors = ['green', 'violet', 'blue'] as const;
+                const entryLabel = ENTRY_TYPES.find((e) => e.value === (t.entry_type ?? 'work'))?.label ?? 'Work';
+                const isPending = '_pending' in t && (t as TimeLog & { _pending?: boolean })._pending;
+                return (
+                  <GlassCard
+                    key={t.id}
+                    style={{ marginBottom: spacing.sm }}
+                    leftBorderColor={borderColors[i % 3]}
+                  >
                     <View style={styles.logRow}>
                       <Text style={styles.logHours}>{t.hours_worked}h</Text>
-                      <Text style={styles.logNotes}>{t.notes || '—'}</Text>
+                      <View style={styles.logMeta}>
+                        <Text style={styles.logType}>{entryLabel}</Text>
+                        <Text style={styles.logNotes}>{t.notes || '—'}</Text>
+                        {isPending && (
+                          <Text style={styles.pendingBadge}>Pending sync</Text>
+                        )}
+                      </View>
                     </View>
                   </GlassCard>
-                ))}
+                );
+              })}
             </View>
           )}
         </ScrollView>
@@ -373,7 +642,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: uiTokens.radius.md,
-    backgroundColor: 'rgba(0,240,255,0.1)',
+    backgroundColor: 'rgba(34,211,238,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -390,11 +659,50 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: 2,
   },
+  weekSubmittedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  weekSubmittedText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.success,
+  },
+  submitWeekRow: {
+    gap: 8,
+  },
+  weekLabel: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: 8,
+  },
+  reportRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  reportLabel: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  reportValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  reportBreakdown: {
+    marginTop: 8,
+  },
+  reportBreakdownText: {
+    fontSize: 13,
+    color: colors.textSecondary,
+  },
   daySelector: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.backgroundSecondary,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -419,48 +727,120 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
   },
+  copyYesterdayBtn: {
+    marginTop: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignSelf: 'flex-start',
+  },
+  copyYesterdayText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.cyan,
+  },
+  entryTypeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  entryTypeChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: uiTokens.radius.pill,
+    backgroundColor: colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+  },
+  entryTypeChipActive: {
+    borderColor: 'transparent',
+    padding: 0,
+  },
+  entryTypeGradient: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: uiTokens.radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  entryTypeText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  entryTypeTextActive: {
+    color: '#FFF',
+  },
   picker: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.backgroundSecondary,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderWidth: 1,
     borderColor: colors.border,
   },
+  pickerDisabled: {
+    opacity: 0.6,
+  },
   pickerText: {
     fontSize: 16,
     color: colors.text,
   },
-  chipScroll: {
-    marginTop: 10,
-    marginBottom: 4,
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
   },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: colors.backgroundTertiary,
-    marginRight: 8,
+  modalContent: {
+    backgroundColor: colors.background,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    maxHeight: '60%',
   },
-  chipActive: {
-    backgroundColor: colors.accent,
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  chipText: {
-    fontSize: 14,
+  modalTitle: {
+    fontSize: 16,
     fontWeight: '600',
-    color: colors.textSecondary,
+    color: colors.text,
   },
-  chipTextActive: {
-    color: '#FFF',
+  modalClose: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.accent,
+  },
+  modalList: {
+    maxHeight: 280,
+  },
+  modalOption: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  modalOptionText: {
+    fontSize: 16,
+    color: colors.text,
   },
   hoursRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: colors.backgroundSecondary,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     paddingHorizontal: 16,
     borderWidth: 1,
@@ -473,6 +853,9 @@ const styles = StyleSheet.create({
     color: colors.text,
     paddingVertical: 14,
   },
+  inputDisabled: {
+    opacity: 0.6,
+  },
   presetRow: {
     flexDirection: 'row',
     marginTop: uiTokens.spacing.md,
@@ -483,13 +866,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: uiTokens.spacing.md,
     paddingVertical: uiTokens.spacing.sm,
     borderRadius: uiTokens.radius.pill,
-    backgroundColor: colors.backgroundTertiary,
+    backgroundColor: colors.surfaceElevated,
     borderWidth: 1,
     borderColor: colors.border,
   },
   presetChipActive: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
+    overflow: 'hidden',
+    borderColor: 'transparent',
+    padding: 0,
+  },
+  presetChipDisabled: {
+    opacity: 0.6,
+  },
+  presetChipGradient: {
+    paddingHorizontal: uiTokens.spacing.md,
+    paddingVertical: uiTokens.spacing.sm,
+    borderRadius: uiTokens.radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  presetChipPressed: {
+    opacity: 0.8,
   },
   presetChipText: {
     color: colors.textSecondary,
@@ -497,10 +894,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   presetChipTextActive: {
-    color: colors.text,
+    color: '#FFF',
   },
   notesInput: {
-    backgroundColor: colors.backgroundSecondary,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
@@ -515,14 +912,29 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  logMeta: {
+    flex: 1,
+    marginLeft: 12,
+  },
   logHours: {
     fontSize: 18,
     fontWeight: '700',
     color: colors.text,
   },
+  logType: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    textTransform: 'capitalize',
+  },
   logNotes: {
     fontSize: 14,
     color: colors.textSecondary,
+  },
+  pendingBadge: {
+    fontSize: 11,
+    color: colors.accent,
+    fontWeight: '600',
+    marginTop: 4,
   },
   taskLanes: {
     paddingBottom: 24,

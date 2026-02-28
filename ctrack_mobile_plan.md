@@ -144,7 +144,7 @@ Primary codebase target: [d:/dev/track/mobile](d:/dev/track/mobile)
   - actionable quick actions (reply/mark-done/approve where role allows)
 - Platform strategy:
   - Android Chrome PWA: web push with service worker
-  - iOS Safari PWA: web push where supported + graceful fallback to in-app alerts
+  - iOS Safari PWA: web push where supported + graceful fallback to in-app alert
   - Native wrapper path for full parity if studio requires guaranteed background delivery
 - Reliability:
   - dedup IDs and idempotent event processing

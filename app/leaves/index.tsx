@@ -1,57 +1,25 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
-  Alert,
-  Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { ChevronLeft, Calendar, FileText } from 'lucide-react-native';
 import { format } from 'date-fns';
-import { useLeaves, useSubmitLeave, type Leave } from '../../lib/api/leaves';
+import { useLeaves, type Leave } from '../../lib/api/leaves';
 import { BrandSpinner } from '../../components/BrandSpinner';
 import { colors } from '../../constants/colors';
 
-const LEAVE_TYPES = [
-  { value: 'Annual', label: 'Annual' },
-  { value: 'Sick', label: 'Sick' },
-  { value: 'Personal', label: 'Personal' },
-  { value: 'Other', label: 'Other' },
-] as const;
-
 export default function LeavesScreen() {
-  const [showForm, setShowForm] = useState(false);
-  const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [leaveType, setLeaveType] = useState<string>('Annual');
-  const [notes, setNotes] = useState('');
-
   const { data: leaves = [], isLoading } = useLeaves();
-  const submitLeave = useSubmitLeave();
-
-  const handleApplyLeave = () => {
-    if (new Date(endDate) < new Date(startDate)) {
-      Alert.alert('Invalid dates', 'End date must be on or after start date.');
-      return;
-    }
-    submitLeave.mutate(
-      { startDate, endDate, type: leaveType, notes: notes || undefined },
-      {
-        onSuccess: () => {
-          setShowForm(false);
-          setNotes('');
-        },
-        onError: (err) => Alert.alert('Error', err.message),
-      }
-    );
-  };
 
   const handleBack = () => router.back();
+
+  const handleCreateLeave = () => router.push('/leaves/new');
 
   if (isLoading) {
     return (
@@ -73,94 +41,16 @@ export default function LeavesScreen() {
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {showForm ? (
-          <View style={styles.formSection}>
-            <Text style={styles.sectionTitle}>Apply Leave</Text>
-
-            <Text style={styles.label}>Date range</Text>
-            <View style={styles.dateRow}>
-              <TextInput
-                style={styles.input}
-                value={startDate}
-                onChangeText={setStartDate}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={colors.textSecondary}
-                editable
-              />
-              <Text style={styles.dateSeparator}>to</Text>
-              <TextInput
-                style={styles.input}
-                value={endDate}
-                onChangeText={setEndDate}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={colors.textSecondary}
-                editable
-              />
-            </View>
-
-            <Text style={styles.label}>Leave type</Text>
-            <View style={styles.typeRow}>
-              {LEAVE_TYPES.map((t) => (
-                <Pressable
-                  key={t.value}
-                  style={[
-                    styles.typeChip,
-                    leaveType === t.value && styles.typeChipActive,
-                  ]}
-                  onPress={() => setLeaveType(t.value)}
-                >
-                  <Text
-                    style={[
-                      styles.typeChipText,
-                      leaveType === t.value && styles.typeChipTextActive,
-                    ]}
-                  >
-                    {t.label}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-
-            <Text style={styles.label}>Notes</Text>
-            <TextInput
-              style={[styles.input, styles.notesInput]}
-              value={notes}
-              onChangeText={setNotes}
-              placeholder="Optional notes"
-              placeholderTextColor={colors.textSecondary}
-              multiline
-            />
-
-            <View style={styles.formActions}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setShowForm(false)}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={handleApplyLeave}
-                disabled={submitLeave.isPending}
-              >
-                {submitLeave.isPending ? (
-                  <BrandSpinner size="sm" />
-                ) : (
-                  <Text style={styles.submitButtonText}>Submit</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={styles.addCard}
-            onPress={() => setShowForm(true)}
-            activeOpacity={0.8}
-          >
-            <Calendar size={24} color={colors.accent} />
-            <Text style={styles.addCardText}>Apply Leave</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          style={styles.addCard}
+          onPress={handleCreateLeave}
+          activeOpacity={0.8}
+          accessibilityLabel="Apply leave"
+          accessibilityRole="button"
+        >
+          <Calendar size={24} color={colors.accent} />
+          <Text style={styles.addCardText}>Apply Leave</Text>
+        </TouchableOpacity>
 
         <View style={styles.listSection}>
           <Text style={styles.sectionTitle}>My Leaves</Text>
@@ -238,99 +128,11 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  formSection: {
-    padding: 20,
-    marginBottom: 24,
-  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: colors.text,
     marginBottom: 16,
-  },
-  label: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 8,
-  },
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 16,
-  },
-  input: {
-    flex: 1,
-    backgroundColor: colors.backgroundSecondary,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: colors.text,
-  },
-  dateSeparator: {
-    color: colors.textSecondary,
-    fontSize: 14,
-  },
-  typeRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 16,
-  },
-  typeChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: colors.backgroundSecondary,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  typeChipActive: {
-    borderColor: colors.accent,
-    backgroundColor: `${colors.accent}22`,
-  },
-  typeChipText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  typeChipTextActive: {
-    color: colors.accent,
-    fontWeight: '600',
-  },
-  notesInput: {
-    minHeight: 80,
-  },
-  formActions: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 8,
-  },
-  cancelButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.textSecondary,
-  },
-  submitButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: colors.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  submitButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFF',
   },
   addCard: {
     flexDirection: 'row',
@@ -352,6 +154,7 @@ const styles = StyleSheet.create({
   },
   listSection: {
     paddingHorizontal: 20,
+    paddingTop: 8,
     paddingBottom: 32,
   },
   emptyText: {

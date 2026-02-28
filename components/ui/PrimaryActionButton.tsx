@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  View,
   TouchableOpacity,
   Text,
   StyleSheet,
@@ -15,6 +16,8 @@ interface PrimaryActionButtonProps {
   disabled?: boolean;
   loading?: boolean;
   style?: ViewStyle;
+  /** Secondary (glass) variant from Design H */
+  variant?: 'primary' | 'secondary';
 }
 
 export function PrimaryActionButton({
@@ -23,41 +26,89 @@ export function PrimaryActionButton({
   disabled = false,
   loading = false,
   style,
+  variant = 'primary',
 }: PrimaryActionButtonProps) {
+  if (variant === 'secondary') {
+    return (
+      <TouchableOpacity
+        style={[
+          styles.buttonSecondary,
+          (disabled || loading) && styles.disabled,
+          style,
+        ]}
+        onPress={onPress}
+        disabled={disabled || loading}
+        activeOpacity={0.85}
+        accessibilityRole="button"
+        accessibilityLabel={label}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color={colors.text} />
+        ) : (
+          <Text style={styles.label}>{label}</Text>
+        )}
+      </TouchableOpacity>
+    );
+  }
+
   return (
     <TouchableOpacity
-      style={[styles.button, (disabled || loading) && styles.disabled, style]}
       onPress={onPress}
       disabled={disabled || loading}
       activeOpacity={0.85}
       accessibilityRole="button"
       accessibilityLabel={label}
+      style={[(disabled || loading) && styles.disabled, style]}
     >
-      {loading ? (
-        <ActivityIndicator size="small" color={colors.text} />
-      ) : (
-        <Text style={styles.label}>{label}</Text>
-      )}
+      <View style={[styles.gradient, (disabled || loading) && styles.gradientDisabled]}>
+        {loading ? (
+          <ActivityIndicator size="small" color="#FFF" />
+        ) : (
+          <Text style={styles.labelGradient}>{label}</Text>
+        )}
+      </View>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  button: {
-    backgroundColor: colors.accent,
-    borderRadius: uiTokens.radius.pill,
-    minHeight: 52,
+  gradient: {
+    minHeight: 50,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: uiTokens.spacing.xl,
+    borderRadius: 999,
+    backgroundColor: colors.accent,
+    shadowColor: colors.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 24,
+    elevation: 4,
+  },
+  gradientDisabled: {
+    opacity: 0.45,
+  },
+  buttonSecondary: {
+    minHeight: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: uiTokens.spacing.xl,
+    borderRadius: 14,
+    backgroundColor: colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   disabled: {
     opacity: 0.45,
   },
   label: {
     color: colors.text,
-    fontSize: uiTokens.text.bodyLg,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  labelGradient: {
+    color: '#FFF',
+    fontSize: 15,
     fontWeight: '700',
   },
 });
-

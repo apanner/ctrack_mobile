@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CTrack — All Designs (Horizontal)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: Inter, system-ui, sans-serif; }
+    body { background: #0a0a0b; color: #f9fafb; display: flex; flex-direction: column; }
+
+    .header {
+      flex-shrink: 0;
+      padding: 12px 16px;
+      background: rgba(0,0,0,.4);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .header::-webkit-scrollbar { height: 4px; }
+    .header::-webkit-scrollbar-thumb { background: rgba(255,255,255,.2); border-radius: 4px; }
+    .header a {
+      flex-shrink: 0;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      color: #a1a1aa;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background .2s, color .2s;
+    }
+    .header a:hover { background: rgba(255,255,255,.12); color: #fff; }
+    .header a.active { background: rgba(255,255,255,.15); color: #fff; }
+
+    .scroll-wrap {
+      flex: 1;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+    .scroll-wrap::-webkit-scrollbar { height: 8px; }
+    .scroll-wrap::-webkit-scrollbar-track { background: rgba(255,255,255,.03); }
+    .scroll-wrap::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 4px; }
+
+    .row {
+      display: flex;
+      gap: 24px;
+      padding: 24px 24px 32px;
+      min-width: min-content;
+      height: 100%;
+      align-items: flex-start;
+    }
+
+    .frame-wrap {
+      flex-shrink: 0;
+      width: 380px;
+      height: 820px;
+      background: #111;
+      border-radius: 44px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.08);
+      box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    }
+    .frame-wrap .label {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,.5);
+      z-index: 10;
+    }
+    .frame-wrap { position: relative; }
+    .frame-wrap iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <a href="#a" data-idx="0">A</a>
+    <a href="#b" data-idx="1">B</a>
+    <a href="#c" data-idx="2">C</a>
+    <a href="#d" data-idx="3">D</a>
+    <a href="#e" data-idx="4">E</a>
+    <a href="#f" data-idx="5">F</a>
+    <a href="#g" data-idx="6">G</a>
+    <a href="#h" data-idx="7">H</a>
+    <a href="#dh1" data-idx="8">DH-1</a>
+    <a href="#dh2" data-idx="9">DH-2</a>
+    <a href="#frost" data-idx="10">Frost</a>
+    <a href="#studio" data-idx="11">Studio</a>
+    <a href="#lens" data-idx="12">Lens</a>
+  </header>
+
+  <div class="scroll-wrap" id="scroll">
+    <div class="row">
+      <div class="frame-wrap" id="a"><span class="label">A — Aurora Glass</span><iframe src="design-a.html" title="A"></iframe></div>
+      <div class="frame-wrap" id="b"><span class="label">B — Neo Minimal</span><iframe src="design-b.html" title="B"></iframe></div>
+      <div class="frame-wrap" id="c"><span class="label">C — Control Room</span><iframe src="design-c.html" title="C"></iframe></div>
+      <div class="frame-wrap" id="d"><span class="label">D — Obsidian Pulse</span><iframe src="design-d.html" title="D"></iframe></div>
+      <div class="frame-wrap" id="e"><span class="label">E — Liquid Ink</span><iframe src="design-e.html" title="E"></iframe></div>
+      <div class="frame-wrap" id="f"><span class="label">F — Carbon Noir</span><iframe src="design-f.html" title="F"></iframe></div>
+      <div class="frame-wrap" id="g"><span class="label">G — Daylight Studio</span><iframe src="design-g.html" title="G"></iframe></div>
+      <div class="frame-wrap" id="h"><span class="label">H — Neon Prism</span><iframe src="design-h.html" title="H"></iframe></div>
+      <div class="frame-wrap" id="dh1"><span class="label">DH-1 — Carbon Neon</span><iframe src="design-dh1.html" title="DH-1"></iframe></div>
+      <div class="frame-wrap" id="dh2"><span class="label">DH-2 — Obsidian Prism</span><iframe src="design-dh2.html" title="DH-2"></iframe></div>
+      <div class="frame-wrap" id="frost"><span class="label">Frost — Pure Glass</span><iframe src="design-frost.html" title="Frost"></iframe></div>
+      <div class="frame-wrap" id="studio"><span class="label">Studio Glass</span><iframe src="design-studio-glass.html" title="Studio"></iframe></div>
+      <div class="frame-wrap" id="lens"><span class="label">Lens</span><iframe src="design-lens.html" title="Lens"></iframe></div>
+    </div>
+  </div>
+
+  <script>
+    const scroll = document.getElementById('scroll');
+    const row = scroll.querySelector('.row');
+    const frames = row.querySelectorAll('.frame-wrap');
+    const links = document.querySelectorAll('.header a');
+    const W = 380 + 24; // frame width + gap
+
+    function scrollToIdx(i) {
+      const x = Math.max(0, i * W - 40);
+      scroll.scrollTo({ left: x, behavior: 'smooth' });
+    }
+
+    function updateActive() {
+      const x = scroll.scrollLeft;
+      const idx = Math.round((x + 40) / W);
+      const i = Math.min(Math.max(0, idx), frames.length - 1);
+      links.forEach((a, k) => a.classList.toggle('active', +a.dataset.idx === i));
+    }
+
+    links.forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        scrollToIdx(+a.dataset.idx);
+      });
+    });
+    scroll.addEventListener('scroll', updateActive);
+    updateActive();
+  </script>
+</body>
+</html>

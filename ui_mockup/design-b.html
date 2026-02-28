@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Concept B - Neo Minimal</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: grid; place-items: center;
+      background: #0a0a0a; color: #fafafa; font-family: Inter, Segoe UI, sans-serif;
+    }
+    .phone { width: 370px; height: 780px; border-radius: 28px; border: 1px solid #27272a; overflow: hidden; background: #09090b; position: relative; }
+    .screens { display: flex; width: 300%; height: 100%; transition: transform .45s ease; }
+    .screen { width: 100%; padding: 24px; }
+    .muted { color: #a1a1aa; font-size: 13px; }
+    h1 { margin: 6px 0 6px; font-size: 36px; letter-spacing: -1px; }
+    .line { height: 1px; background: #27272a; margin: 16px 0; }
+    .item { border: 1px solid #27272a; border-radius: 16px; padding: 14px; margin-bottom: 10px; }
+    .big {
+      width: 100%; border: 0; border-radius: 14px; background: #fafafa; color: #111; padding: 14px; font-weight: 700; cursor: pointer;
+    }
+    .nav {
+      position: absolute; left: 12px; right: 12px; bottom: 12px;
+      background: #111; border: 1px solid #27272a; border-radius: 16px; display: flex; gap: 6px; padding: 6px;
+    }
+    .nav button { flex: 1; border: 0; border-radius: 12px; background: transparent; color: #71717a; padding: 10px; cursor: pointer; }
+    .nav button.active { background: #fafafa; color: #111; font-weight: 700; }
+    .tag { display: inline-block; font-size: 11px; padding: 6px 10px; border: 1px solid #3f3f46; border-radius: 999px; color: #d4d4d8; }
+    .back { position: absolute; right: 14px; top: 10px; font-size: 12px; color: #a1a1aa; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="phone">
+    <a class="back" href="./index.html">All concepts</a>
+    <div class="screens" id="screens">
+      <section class="screen">
+        <div class="muted">Concept B</div>
+        <h1>Pure Focus</h1>
+        <div class="muted">Minimal launch and no visual noise.</div>
+        <div class="line"></div>
+        <div class="item">
+          <div class="tag">VFX ARTIST WORKFLOW</div>
+          <p class="muted" style="margin:10px 0 0;">Clock in, pick shot, ship result. Fast and clean.</p>
+        </div>
+        <button class="big" onclick="go(1)">Start Session</button>
+      </section>
+      <section class="screen">
+        <h2 style="margin:0 0 8px;font-size:28px;">Home</h2>
+        <div class="muted">Thursday · 3 tasks remaining</div>
+        <div class="line"></div>
+        <div class="item"><strong>Today Logged</strong><br /><span class="muted">5.2 hours</span></div>
+        <div class="item"><strong>Next Shot</strong><br /><span class="muted">SH_450 · Atmos cleanup</span></div>
+        <button class="big" onclick="go(2)">Open Chat + Notes</button>
+      </section>
+      <section class="screen">
+        <h2 style="margin:0 0 8px;font-size:28px;">Collaboration</h2>
+        <div class="muted">Simple communication pane</div>
+        <div class="line"></div>
+        <div class="item">Lead: “Need the lens flare softer by 20%.”</div>
+        <div class="item">You: “Updated pass sent for review.”</div>
+        <div class="item">Producer: “Approved. Proceed final export.”</div>
+        <button class="big" onclick="go(1)">Back Home</button>
+      </section>
+    </div>
+    <nav class="nav">
+      <button class="active" onclick="go(0)">Start</button>
+      <button onclick="go(1)">Home</button>
+      <button onclick="go(2)">Other</button>
+    </nav>
+  </div>
+  <script>
+    const screens = document.getElementById('screens');
+    const tabs = [...document.querySelectorAll('.nav button')];
+    function go(i) {
+      screens.style.transform = `translateX(-${i * 33.333}%)`;
+      tabs.forEach((t, idx) => t.classList.toggle('active', idx === i));
+    }
+  </script>
+</body>
+</html>

@@ -1,31 +1,29 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  Pressable,
-} from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, Platform } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useDashboard } from '../../lib/api/dashboard';
 import { useNotifications } from '../../lib/api/notifications';
 import { useShots } from '../../lib/api/shots';
 import { useCurrentUser } from '../../lib/api/profile';
-import { useTimer } from '../../contexts/TimerContext';
 import { useAdaptiveLayout } from '../../lib/adaptive-layout';
 import { BrandSpinner } from '../../components/BrandSpinner';
 import { GlassCard } from '../../components/GlassCard';
 import { colors } from '../../constants/colors';
 import { router } from 'expo-router';
-import {
-  Clock,
-  ListTodo,
-  Bell,
-} from 'lucide-react-native';
+import { Timer, Calendar, Target } from 'lucide-react-native';
 import { format } from 'date-fns';
 import { ScreenContainer } from '../../components/ui/ScreenContainer';
 import { SectionHeader } from '../../components/ui/SectionHeader';
-import { PrimaryActionButton } from '../../components/ui/PrimaryActionButton';
+import { PwaInstallBanner } from '../../components/PwaInstallBanner';
 import { uiTokens } from '../../constants/ui-tokens';
+
+const WEEKLY_GOAL_HOURS = 40;
+
+const QUICK_ACTIONS = [
+  { key: 'log', label: 'Log Time', icon: Timer, color: colors.cyan, iconBg: colors.meshCyan, onPress: () => router.push('/(tabs)/work') },
+  { key: 'leave', label: 'Leave', icon: Calendar, color: colors.purple, iconBg: colors.meshPurple, onPress: () => router.push('/leaves') },
+  { key: 'focus', label: 'Focus', icon: Target, color: colors.green, iconBg: colors.meshGreen, onPress: () => router.push('/focus-timer') },
+] as const;
 
 export default function HomeScreen() {
   const { spacing } = useAdaptiveLayout();
@@ -36,7 +34,6 @@ export default function HomeScreen() {
   const { data: shots = [], isLoading: shotsLoading } = useShots(
     user?.role === 'artist' ? { artist_id: user?.id } : undefined
   );
-  const { activeTimer, setActiveTimer } = useTimer();
 
   const todayStr = format(new Date(), 'yyyy-MM-dd');
 
@@ -49,184 +46,212 @@ export default function HomeScreen() {
   ) ?? [];
 
   const displayTodayTasks = todayTasks.length > 0 ? todayTasks : todayShots;
-
-  const handleStartTimer = () => {
-    const first = displayTodayTasks[0];
-    const shotCode =
-      (first && 'shot_code' in first ? first.shot_code : null) ??
-      (first && 'title' in first ? first.title : null) ??
-      'SH_120';
-    const taskName =
-      (first && 'title' in first ? first.title : null) ??
-      (first && 'department' in first ? first.department : null) ??
-      'Comp';
-    setActiveTimer({
-      shotCode: typeof shotCode === 'string' ? shotCode : 'SH_120',
-      taskName: typeof taskName === 'string' ? taskName : 'Comp',
-      startedAt: new Date(),
-    });
-    router.push('/(tabs)/work');
-  };
+  const weekHours = dashboard?.weekHours ?? 0;
+  const goalPercent = Math.min(100, Math.round((weekHours / WEEKLY_GOAL_HOURS) * 100));
 
   const isLoading = dashLoading || shotsLoading;
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <ScreenContainer>
         <BrandSpinner fullScreen size="large" />
-      </SafeAreaView>
+      </ScreenContainer>
     );
   }
 
   if (dashError) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <ScreenContainer>
         <View style={styles.errorContainer}>
           <Text style={styles.errorTitle}>Could not load dashboard</Text>
           <Text style={styles.errorText}>{String(dashError)}</Text>
         </View>
-      </SafeAreaView>
+      </ScreenContainer>
     );
   }
 
-  // Determine greeting based on time
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
   const firstName = user?.full_name?.split(' ')[0] || 'Artist';
+  const initials = user?.full_name
+    ?.split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2) || 'A';
 
   return (
     <ScreenContainer>
-      <View style={[styles.header, { paddingHorizontal: spacing.lg }]}>
-        <View>
-          <Text style={styles.greetingText}>{greeting}</Text>
-          <Text style={styles.nameText}>{firstName}</Text>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: spacing.xxl * 4 }}
+      >
+        <View style={[styles.header, { paddingHorizontal: spacing.lg }]}>
+          <View>
+            <Text style={styles.greetingText}>{greeting},</Text>
+            <Text style={styles.nameText}>{firstName}</Text>
+          </View>
+          <Pressable
+            onPress={() =>
+              unreadNotificationCount > 0
+                ? router.push('/notifications')
+                : router.push('/(tabs)/me')
+            }
+            style={styles.avatarButton}
+          >
+            <LinearGradient
+              colors={[colors.cyan, colors.purple]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.avatarGradient}
+            >
+              <Text style={styles.avatarText}>{initials}</Text>
+            </LinearGradient>
+            {unreadNotificationCount > 0 ? (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>
+                  {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                </Text>
+              </View>
+            ) : null}
+          </Pressable>
         </View>
-        <Pressable
-          onPress={() => router.push('/notifications')}
-          style={styles.notificationButton}
-        >
-          <Bell color={colors.text} size={uiTokens.icon.lg} />
-          {unreadNotificationCount > 0 ? (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>
-                {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
-              </Text>
-            </View>
-          ) : null}
-        </Pressable>
-      </View>
 
-      <View style={[styles.kpiRow, { paddingHorizontal: spacing.lg }]}>
-        <View style={styles.kpiCell}>
-          <Clock size={uiTokens.icon.md} color={colors.cyan} />
-          <Text style={styles.kpiValue}>{dashboard?.todayHours?.toFixed(1) ?? '0'}h</Text>
-        </View>
-        <View style={styles.kpiDivider} />
-        <View style={styles.kpiCell}>
-          <ListTodo size={uiTokens.icon.md} color={colors.purple} />
-          <Text style={styles.kpiValue}>{dashboard?.pendingCount ?? 0}</Text>
-        </View>
-      </View>
-
-      <View style={[styles.primaryActionWrap, { paddingHorizontal: spacing.lg }]}>
-        {activeTimer ? (
-          <GlassCard>
-            <View style={styles.activeTimerCard}>
-              <Text style={styles.activeLabel}>Active timer</Text>
-              <Text style={styles.activeText}>
-                {activeTimer.shotCode} · {activeTimer.taskName}
-              </Text>
-              <PrimaryActionButton
-                label="Continue in Work"
-                onPress={() => router.push('/(tabs)/work')}
-              />
-            </View>
-          </GlassCard>
-        ) : (
-          <GlassCard>
-            <View style={styles.activeTimerCard}>
-              <Text style={styles.activeLabel}>Today</Text>
-              <Text style={styles.activeText}>Ready to start your first log?</Text>
-              <PrimaryActionButton label="Start Timer" onPress={handleStartTimer} />
-            </View>
-          </GlassCard>
+        {Platform.OS === 'web' && (
+          <View style={{ paddingHorizontal: spacing.lg, marginBottom: spacing.md }}>
+            <PwaInstallBanner />
+          </View>
         )}
-      </View>
 
-      <View style={[styles.sectionWrap, { paddingHorizontal: spacing.lg }]}>
-        <SectionHeader
-          title="Today's Tasks"
-          actionLabel="Open Work"
-          onActionPress={() => router.push('/(tabs)/work')}
-        />
-        <FlatList
-          data={displayTodayTasks.slice(0, 3)}
-          keyExtractor={(item) => item.id}
-          scrollEnabled={false}
-          ItemSeparatorComponent={() => <View style={{ height: uiTokens.spacing.md }} />}
-          ListEmptyComponent={
+        {/* Weekly summary — at-a-glance */}
+        <View style={[styles.summaryRow, { paddingHorizontal: spacing.lg }]}>
+          <GlassCard style={styles.summaryCard}>
+            <Text style={styles.summaryValue}>{weekHours.toFixed(1)}h</Text>
+            <Text style={styles.summaryLabel}>This week</Text>
+          </GlassCard>
+          <GlassCard style={styles.summaryCard}>
+            <View style={styles.goalRow}>
+              <View style={[styles.goalBar, { width: `${goalPercent}%` }]} />
+            </View>
+            <Text style={styles.summaryLabel}>{goalPercent}% of {WEEKLY_GOAL_HOURS}h</Text>
+          </GlassCard>
+          <GlassCard style={styles.summaryCard}>
+            <Text style={styles.summaryValue}>{displayTodayTasks.length}</Text>
+            <Text style={styles.summaryLabel}>Today</Text>
+          </GlassCard>
+        </View>
+
+        {/* Today's tasks — simple, scannable list */}
+        <View style={[styles.sectionWrap, { paddingHorizontal: spacing.lg }]}>
+          <SectionHeader title="Today" actionLabel="Log time" onActionPress={() => router.push('/(tabs)/work')} compact />
+          {displayTodayTasks.length > 0 ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={{ marginHorizontal: -spacing.lg }}
+              contentContainerStyle={[styles.queueScrollContent, { paddingHorizontal: spacing.lg }]}
+            >
+              {displayTodayTasks.slice(0, 6).map((item) => {
+                const label =
+                  ('shot_code' in item && item.shot_code) ||
+                  ('title' in item && item.title) ||
+                  'Task';
+                const shotId = 'shot_id' in item ? item.shot_id : item.id;
+                const dept = 'department' in item ? item.department : 'Task';
+                const isOverdue = item.due_date && new Date(item.due_date) < new Date();
+                return (
+                  <Pressable
+                    key={item.id}
+                    onPress={() => shotId && router.push(`/shot/${shotId}`)}
+                    style={styles.queueCardWrap}
+                  >
+                    <GlassCard noPadding>
+                      <View style={styles.queueCardContent}>
+                        <Text style={styles.queueCode}>{label}</Text>
+                        <Text style={styles.queueDept}>{dept}</Text>
+                        <Text style={[styles.queueDue, isOverdue ? { color: colors.red } : { color: colors.accent }]}>
+                          {item.due_date ? `Due ${format(new Date(item.due_date), 'h:mm a')}` : '—'}
+                        </Text>
+                      </View>
+                    </GlassCard>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          ) : (
             <GlassCard>
-              <Text style={styles.emptyText}>No urgent items for today.</Text>
+              <Text style={styles.emptyText}>No tasks for today.</Text>
             </GlassCard>
-          }
-          renderItem={({ item }) => {
-            const label =
-              ('shot_code' in item && item.shot_code) ||
-              ('title' in item && item.title) ||
-              'Task';
-            const shotId = 'shot_id' in item ? item.shot_id : item.id;
+          )}
+        </View>
 
-            return (
-              <Pressable onPress={() => shotId && router.push(`/shot/${shotId}`)}>
-                <GlassCard>
-                  <View style={styles.taskItem}>
-                    <Text style={styles.taskTitle} numberOfLines={1}>
-                      {label}
-                    </Text>
-                    <Text style={styles.taskMeta}>
-                      {item.due_date
-                        ? format(new Date(item.due_date), 'h:mm a')
-                        : 'No due time'}
-                    </Text>
-                  </View>
-                </GlassCard>
+        {/* Quick actions — Log Time, Leave, Focus */}
+        <View style={[styles.sectionWrap, { paddingHorizontal: spacing.lg }]}>
+          <SectionHeader title="Quick actions" compact />
+          <View style={styles.shortcutsRow}>
+            {QUICK_ACTIONS.map((action) => (
+              <Pressable
+                key={action.key}
+                style={styles.shortcutCell}
+                onPress={action.onPress}
+              >
+                <View style={[styles.shortcutIcon, { backgroundColor: action.iconBg }]}>
+                  <action.icon size={20} color={action.color} strokeWidth={2} />
+                </View>
+                <Text style={styles.shortcutLabel}>{action.label}</Text>
               </Pressable>
-            );
-          }}
-        />
-      </View>
+            ))}
+          </View>
+        </View>
+      </ScrollView>
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: uiTokens.spacing.lg,
-    marginBottom: uiTokens.spacing.lg,
+    marginBottom: uiTokens.spacing.md,
   },
   greetingText: {
-    fontSize: uiTokens.text.bodyLg,
+    fontSize: 13,
     color: colors.textSecondary,
     fontWeight: '600',
   },
   nameText: {
-    fontSize: uiTokens.text.headline,
-    fontWeight: '800',
+    fontSize: 28,
+    fontWeight: '900',
     color: colors.text,
-    letterSpacing: -0.5,
+    letterSpacing: -0.6,
+    marginTop: 2,
   },
-  notificationButton: {
+  avatarButton: {
     width: 44,
     height: 44,
-    borderRadius: uiTokens.radius.pill,
-    backgroundColor: colors.backgroundSecondary,
-    justifyContent: 'center',
+    borderRadius: 22,
+    overflow: 'hidden',
+  },
+  avatarGradient: {
+    flex: 1,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
+    justifyContent: 'center',
+    shadowColor: colors.cyan,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  avatarText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#FFF',
   },
   badge: {
     position: 'absolute',
@@ -241,53 +266,104 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
   },
   badgeText: {
-    color: colors.text,
+    color: '#FFF',
     fontSize: 10,
     fontWeight: '700',
   },
-  kpiRow: {
+  summaryRow: {
     flexDirection: 'row',
-    backgroundColor: colors.backgroundSecondary,
-    borderRadius: uiTokens.radius.xl,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingVertical: uiTokens.spacing.lg,
+    gap: 10,
+    marginBottom: uiTokens.spacing.xl,
   },
-  kpiCell: {
+  summaryCard: {
     flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
     alignItems: 'center',
-    gap: uiTokens.spacing.xs,
+    minHeight: 72,
   },
-  kpiValue: {
-    fontSize: uiTokens.text.title,
-    fontWeight: '700',
+  summaryValue: {
+    fontSize: 22,
+    fontWeight: '800',
     color: colors.text,
+    fontVariant: ['tabular-nums'],
   },
-  kpiDivider: {
-    width: 1,
-    backgroundColor: colors.border,
-    marginVertical: uiTokens.spacing.sm,
-  },
-  primaryActionWrap: {
-    marginTop: uiTokens.spacing.lg,
-  },
-  activeTimerCard: {
-    gap: uiTokens.spacing.md,
-  },
-  activeLabel: {
-    fontSize: uiTokens.text.caption,
+  summaryLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.textTertiary,
+    marginTop: 4,
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    color: colors.textSecondary,
-    fontWeight: '700',
   },
-  activeText: {
-    fontSize: uiTokens.text.title,
-    fontWeight: '700',
-    color: colors.text,
+  goalRow: {
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.border,
+    overflow: 'hidden',
+    width: '100%',
+    marginBottom: 4,
+  },
+  goalBar: {
+    height: '100%',
+    borderRadius: 2,
+    backgroundColor: colors.accent,
   },
   sectionWrap: {
-    marginTop: uiTokens.spacing.xl,
+    marginBottom: uiTokens.spacing.xl,
+  },
+  queueScrollContent: {
+    gap: 12,
+    paddingVertical: 4,
+    flexDirection: 'row',
+  },
+  queueCardWrap: {
+    minWidth: 180,
+  },
+  queueCardContent: {
+    padding: uiTokens.spacing.lg,
+  },
+  queueCode: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  queueDept: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 4,
+  },
+  queueDue: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.accent,
+    marginTop: 8,
+  },
+  shortcutsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  shortcutCell: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 8,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  shortcutIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  shortcutLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.text,
   },
   taskItem: {
     flexDirection: 'row',

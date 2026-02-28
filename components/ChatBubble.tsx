@@ -118,12 +118,16 @@ function AudioAttachment({
   );
 }
 
-function FullscreenImageModal({ attachmentId, onClose }: { attachmentId: string; onClose: () => void }) {
+function FullscreenImageModal({ urlOrId, onClose }: { urlOrId: string; onClose: () => void }) {
   const [url, setUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    getAttachmentUrl(attachmentId).then(setUrl);
-  }, [attachmentId]);
+    if (urlOrId.startsWith('http://') || urlOrId.startsWith('https://')) {
+      setUrl(urlOrId);
+    } else {
+      getAttachmentUrl(urlOrId).then(setUrl);
+    }
+  }, [urlOrId]);
 
   return (
     <Modal visible transparent animationType="fade">
@@ -138,12 +142,20 @@ function FullscreenImageModal({ attachmentId, onClose }: { attachmentId: string;
   );
 }
 
+const GIF_URL_REGEX = /^https?:\/\/.+(giphy\.com|\.gif)/i;
+
+function isGifUrl(text: string): boolean {
+  const trimmed = text.trim();
+  return trimmed.length > 0 && GIF_URL_REGEX.test(trimmed);
+}
+
 export function ChatBubble({ message, isMe, timestamp, senderName, attachment, attachmentId }: ChatBubbleProps) {
   const [fullscreenImageId, setFullscreenImageId] = useState<string | null>(null);
 
   const hasImage = attachment?.mime_type?.startsWith('image/');
   const hasAudio = attachment?.mime_type?.startsWith('audio/');
   const idToUse = attachmentId ?? attachment?.id;
+  const isGifMessage = message && isGifUrl(message);
 
   return (
     <View style={[styles.container, isMe ? styles.myMessage : styles.theirMessage]}>
@@ -152,6 +164,11 @@ export function ChatBubble({ message, isMe, timestamp, senderName, attachment, a
         {idToUse && hasImage && (
           <ImageAttachment attachmentId={idToUse} isMe={isMe} onPress={() => setFullscreenImageId(idToUse)} />
         )}
+        {isGifMessage && (
+          <TouchableOpacity onPress={() => setFullscreenImageId(message)} activeOpacity={0.9}>
+            <Image source={{ uri: message }} style={styles.thumbnail} contentFit="cover" />
+          </TouchableOpacity>
+        )}
         {idToUse && hasAudio && (
           <AudioAttachment
             attachmentId={idToUse}
@@ -159,7 +176,7 @@ export function ChatBubble({ message, isMe, timestamp, senderName, attachment, a
             isMe={isMe}
           />
         )}
-        {message && message !== '[Media]' && (
+        {message && message !== '[Media]' && !isGifMessage && (
           <Text style={[styles.messageText, isMe ? styles.myMessageText : styles.theirMessageText]}>
             {message}
           </Text>
@@ -170,7 +187,7 @@ export function ChatBubble({ message, isMe, timestamp, senderName, attachment, a
       </Text>
 
       {fullscreenImageId ? (
-        <FullscreenImageModal attachmentId={fullscreenImageId} onClose={() => setFullscreenImageId(null)} />
+        <FullscreenImageModal urlOrId={fullscreenImageId} onClose={() => setFullscreenImageId(null)} />
       ) : null}
     </View>
   );

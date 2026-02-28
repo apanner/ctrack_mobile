@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Concept C - Control Room</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: grid; place-items: center;
+      background: linear-gradient(160deg, #020617, #111827 55%, #1f2937);
+      color: #f8fafc; font-family: Inter, Segoe UI, sans-serif;
+    }
+    .phone {
+      width: 370px; height: 780px; border-radius: 30px; overflow: hidden;
+      border: 1px solid rgba(148,163,184,.4);
+      background: #020617; position: relative;
+      box-shadow: 0 20px 80px rgba(2,132,199,.25);
+    }
+    .screens { display: flex; width: 300%; height: 100%; transition: transform .55s cubic-bezier(.22,1,.36,1); }
+    .screen { width: 100%; padding: 20px; }
+    .panel { border: 1px solid rgba(148,163,184,.25); border-radius: 16px; background: rgba(15,23,42,.8); padding: 12px; margin-bottom: 10px; }
+    .title { font-size: 30px; margin: 8px 0 6px; letter-spacing: -.5px; }
+    .small { font-size: 12px; color: #93c5fd; text-transform: uppercase; letter-spacing: .08em; }
+    .status { display:flex; gap:8px; margin: 10px 0 14px; }
+    .status span { font-size: 11px; padding: 6px 8px; border-radius: 999px; border: 1px solid rgba(148,163,184,.35); color:#cbd5e1; }
+    .cta {
+      width: 100%; border: 1px solid #22d3ee; background: #083344; color: #ccfbf1;
+      padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer;
+    }
+    .rail { display:grid; gap:8px; }
+    .rail .panel { border-left: 4px solid #38bdf8; }
+    .nav {
+      position:absolute; bottom:12px; left:12px; right:12px;
+      background: rgba(15,23,42,.95); border:1px solid rgba(148,163,184,.3);
+      border-radius:12px; display:flex; padding:6px; gap:6px;
+    }
+    .nav button { flex:1; border:0; background:transparent; color:#94a3b8; padding:10px; border-radius:8px; cursor:pointer; }
+    .nav button.active { background:#0f172a; color:#22d3ee; border:1px solid rgba(34,211,238,.35); }
+    .back { position:absolute; right:14px; top:10px; color:#7dd3fc; font-size:12px; text-decoration:none; }
+  </style>
+</head>
+<body>
+  <div class="phone">
+    <a class="back" href="./index.html">All concepts</a>
+    <div class="screens" id="screens">
+      <section class="screen">
+        <div class="small">Concept C</div>
+        <div class="title">Control Room</div>
+        <div style="color:#cbd5e1;margin-bottom:16px;">Mission-style startup for production visibility.</div>
+        <div class="panel">
+          <div>Pipeline status</div>
+          <div class="status">
+            <span>Render: Healthy</span><span>Comp: Active</span><span>Sync: Live</span>
+          </div>
+          <button class="cta" onclick="go(1)">Launch Dashboard</button>
+        </div>
+      </section>
+      <section class="screen">
+        <div class="title">Home Ops</div>
+        <div class="small">Today / Artist 14</div>
+        <div class="panel">
+          <strong>Current Run</strong>
+          <div style="margin-top:6px;color:#cbd5e1;">SH_882 · FX debris pass · 00:37</div>
+        </div>
+        <div class="panel">
+          <strong>Alerts</strong>
+          <div style="margin-top:6px;color:#cbd5e1;">2 reviews pending · 1 overdue shot</div>
+          <button class="cta" style="margin-top:8px;" onclick="go(2)">Open Timeline</button>
+        </div>
+      </section>
+      <section class="screen">
+        <div class="title">Timeline</div>
+        <div class="small">Shot activity stream</div>
+        <div class="rail">
+          <div class="panel"><strong>09:10</strong> SH_772 moved to In Progress</div>
+          <div class="panel"><strong>11:40</strong> Note added by Supervisor</div>
+          <div class="panel"><strong>14:20</strong> Final comp queued for review</div>
+        </div>
+        <button class="cta" style="margin-top:10px;" onclick="go(1)">Back Home</button>
+      </section>
+    </div>
+    <nav class="nav">
+      <button class="active" onclick="go(0)">Start</button>
+      <button onclick="go(1)">Home</button>
+      <button onclick="go(2)">Other</button>
+    </nav>
+  </div>
+  <script>
+    const screens = document.getElementById('screens');
+    const tabs = [...document.querySelectorAll('.nav button')];
+    function go(i) {
+      screens.style.transform = `translateX(-${i * 33.333}%)`;
+      tabs.forEach((t, idx) => t.classList.toggle('active', idx === i));
+    }
+  </script>
+</body>
+</html>

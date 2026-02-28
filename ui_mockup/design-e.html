@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>E — Liquid Ink</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0C0C0E;--surface:#161618;--surface2:#1E1E21;--border:rgba(255,255,255,.06);
+  --ink:#E8E4FF;--tint:#C4B5FD;--coral:#FF7A5C;--mint:#6EE7B7;--sky:#7DD3FC;
+  --text:#EEEEF0;--text2:#79797F;--text3:#4A4A50;
+  --r:22px;--pill:999px;
+  font-family:'Inter',system-ui,sans-serif;color-scheme:dark;
+}
+html,body{height:100%;overflow:hidden}
+body{background:#000;display:grid;place-items:center}
+
+.device{
+  width:min(393px,100vw);height:min(852px,100vh);position:relative;overflow:hidden;
+  background:var(--bg);border-radius:44px;border:1px solid rgba(255,255,255,.1);
+  box-shadow:0 0 100px rgba(196,181,253,.06),0 50px 120px rgba(0,0,0,.8);
+}
+
+/* Status */
+.sb{height:54px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;position:relative;z-index:20}
+.sb .n{width:126px;height:34px;background:#000;border-radius:0 0 20px 20px;position:absolute;top:0;left:50%;transform:translateX(-50%)}
+.sb .t{font-size:15px;font-weight:600;color:var(--text)}
+
+/* Pages */
+.stack{position:absolute;inset:0;top:54px;bottom:82px;overflow:hidden}
+.pg{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:0 22px 40px;
+  transition:transform .44s cubic-bezier(.36,.83,.13,1),opacity .35s ease;
+  will-change:transform,opacity;-webkit-overflow-scrolling:touch;
+}
+.pg::-webkit-scrollbar{display:none}
+.pg.on{transform:translateX(0);opacity:1;pointer-events:auto}
+.pg.l{transform:translateX(-28%);opacity:0;pointer-events:none}
+.pg.r{transform:translateX(100%);opacity:0;pointer-events:none}
+
+/* Tabs */
+.tabs{
+  position:absolute;bottom:14px;left:18px;right:18px;z-index:30;
+  height:56px;border-radius:20px;
+  background:rgba(22,22,24,.88);backdrop-filter:blur(40px)saturate(1.5);-webkit-backdrop-filter:blur(40px)saturate(1.5);
+  border:1px solid var(--border);display:flex;align-items:center;padding:0 4px;
+}
+.ti{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;cursor:pointer;
+  border-radius:14px;transition:.2s;-webkit-user-select:none;user-select:none;
+}
+.ti:active{background:rgba(255,255,255,.04)}
+.ti svg{width:21px;height:21px;stroke-width:1.8;fill:none;stroke:var(--text3);transition:.2s}
+.ti span{font-size:10px;font-weight:600;color:var(--text3);transition:.2s}
+.ti.on svg{stroke:var(--tint)}
+.ti.on span{color:var(--text)}
+
+/* Atoms */
+.lbl{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--text3);text-transform:uppercase;margin-bottom:10px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;position:relative;overflow:hidden}
+.card::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(196,181,253,.15),transparent)}
+.pbtn{
+  display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:52px;
+  border-radius:16px;border:0;font-weight:700;font-size:15px;cursor:pointer;
+  transition:transform .15s,box-shadow .2s;
+}
+.pbtn:active{transform:scale(.96)}
+.pbtn.p{background:linear-gradient(135deg,var(--tint),var(--coral));color:#111;box-shadow:0 6px 30px rgba(196,181,253,.25)}
+.pbtn.s{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+
+/* =========== SPLASH =========== */
+#sp{
+  position:absolute;inset:0;z-index:100;
+  background:radial-gradient(ellipse at 50% 30%,rgba(196,181,253,.08),var(--bg) 70%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity .7s ease,transform .5s ease;
+}
+#sp.go{opacity:0;transform:scale(1.1);pointer-events:none}
+.sp-logo{position:relative;width:100px;height:100px;display:flex;align-items:center;justify-content:center}
+.sp-logo .r1{
+  position:absolute;inset:-4px;border-radius:50%;
+  border:2px solid transparent;border-top-color:var(--tint);border-right-color:var(--tint);
+  animation:sp-s 1.4s linear infinite;
+}
+.sp-logo .r2{
+  position:absolute;inset:8px;border-radius:50%;
+  border:2px solid transparent;border-bottom-color:var(--coral);
+  animation:sp-s 2s linear infinite reverse;
+}
+.sp-logo .ch{font-size:38px;font-weight:900;background:linear-gradient(135deg,var(--tint),var(--coral));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+@keyframes sp-s{to{transform:rotate(360deg)}}
+.sp-t{font-size:30px;font-weight:800;letter-spacing:-1px;margin-top:26px;color:var(--text)}
+.sp-st{font-size:13px;color:var(--text3);margin-top:6px}
+.sp-bar{width:120px;height:2px;background:var(--surface2);border-radius:1px;margin-top:44px;overflow:hidden}
+.sp-bar div{height:100%;width:0;background:linear-gradient(90deg,var(--tint),var(--coral));border-radius:1px;animation:sp-l 2.2s ease forwards}
+@keyframes sp-l{to{width:100%}}
+
+/* =========== HOME =========== */
+.hero-wrap{position:relative;margin-bottom:18px}
+.hero-bg{position:absolute;top:-40px;left:-40px;right:-40px;height:200px;background:radial-gradient(ellipse at 50% 20%,rgba(196,181,253,.07),transparent 70%);pointer-events:none}
+.greet{font-size:14px;font-weight:600;color:var(--text2)}
+.uname{font-size:32px;font-weight:900;letter-spacing:-.8px;color:var(--text);margin-top:2px}
+.ava{width:46px;height:46px;border-radius:16px;background:linear-gradient(135deg,var(--tint),var(--coral));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;color:#111;flex-shrink:0}
+
+/* Glowing timer card */
+.tmr{
+  border-radius:var(--r);padding:20px;margin-top:14px;position:relative;overflow:hidden;
+  background:var(--surface);border:1px solid rgba(196,181,253,.15);
+}
+.tmr::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:conic-gradient(from 180deg,transparent,rgba(196,181,253,.06),transparent 30%);animation:tmr-g 4s linear infinite}
+@keyframes tmr-g{to{transform:rotate(360deg)}}
+.tmr .inner{position:relative;z-index:1}
+.tmr .dot{width:8px;height:8px;border-radius:50%;background:var(--coral);display:inline-block;margin-right:8px;animation:pd 1.4s ease infinite}
+@keyframes pd{0%,100%{opacity:1}50%{opacity:.4}}
+.tmr .big{font-size:36px;font-weight:900;color:var(--text);margin-top:8px;font-variant-numeric:tabular-nums;letter-spacing:-1px}
+.tmr .sub{font-size:13px;color:var(--text2);margin-top:4px}
+
+/* Bento stats */
+.bento{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px}
+.bento .b{text-align:center;padding:14px 6px;border-radius:16px;background:var(--surface);border:1px solid var(--border)}
+.bento .v{font-size:20px;font-weight:800;color:var(--text)}
+.bento .k{font-size:10px;font-weight:600;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.06em}
+
+/* Shot strip */
+.strip{display:flex;gap:10px;overflow-x:auto;padding:4px 0;-webkit-overflow-scrolling:touch}
+.strip::-webkit-scrollbar{display:none}
+.shot{
+  min-width:170px;padding:16px;border-radius:18px;flex-shrink:0;cursor:pointer;
+  background:var(--surface);border:1px solid var(--border);transition:transform .2s;
+}
+.shot:active{transform:scale(.97)}
+.shot .sc{font-size:16px;font-weight:700;color:var(--text)}
+.shot .sd{font-size:12px;color:var(--text2);margin-top:3px}
+.shot .st{display:inline-block;font-size:10px;font-weight:700;padding:4px 8px;border-radius:var(--pill);margin-top:10px}
+
+/* Actions row */
+.arow{display:flex;gap:8px;margin-top:12px}
+.acell{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 6px;
+  border-radius:18px;background:var(--surface);border:1px solid var(--border);cursor:pointer;
+  transition:transform .15s;
+}
+.acell:active{transform:scale(.96)}
+.acell .ai{width:34px;height:34px;border-radius:12px;display:flex;align-items:center;justify-content:center}
+.acell span{font-size:11px;font-weight:600;color:var(--text)}
+
+/* =========== WORK =========== */
+.wcal{display:flex;gap:5px;overflow-x:auto;padding:2px 0;-webkit-overflow-scrolling:touch}
+.wcal::-webkit-scrollbar{display:none}
+.wd{
+  min-width:44px;text-align:center;padding:10px 4px;border-radius:14px;cursor:pointer;
+  transition:.2s;flex-shrink:0;
+}
+.wd .dd{font-size:10px;font-weight:600;color:var(--text3)}
+.wd .dn{font-size:17px;font-weight:700;color:var(--text);margin-top:2px}
+.wd.ac{background:var(--tint);border:1px solid var(--tint)}
+.wd.ac .dd,.wd.ac .dn{color:#111}
+
+.trow{
+  display:flex;align-items:center;gap:12px;padding:14px;border-radius:16px;
+  background:var(--surface);border:1px solid var(--border);margin-bottom:8px;
+}
+.trow .th{font-size:18px;font-weight:800;color:var(--text);min-width:42px}
+.trow .tp{font-size:14px;font-weight:600;color:var(--text)}
+.trow .tn{font-size:12px;color:var(--text3);margin-top:2px}
+.trow .td{width:6px;height:6px;border-radius:3px;margin-left:auto;flex-shrink:0}
+
+/* =========== CHAT =========== */
+.rm{
+  display:flex;align-items:center;gap:12px;padding:14px;border-radius:16px;
+  background:var(--surface);border:1px solid var(--border);margin-bottom:8px;
+  cursor:pointer;transition:.2s;
+}
+.rm:active{background:var(--surface2)}
+.rma{width:42px;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#111;flex-shrink:0}
+.rm .rn{font-size:14px;font-weight:600;color:var(--text)}
+.rm .rp{font-size:12px;color:var(--text3);margin-top:2px}
+.rm .rt{font-size:11px;color:var(--text3);margin-left:auto;flex-shrink:0}
+.ubadge{min-width:20px;height:20px;border-radius:10px;background:var(--coral);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;padding:0 5px;margin-left:auto}
+
+/* Chat room */
+.msgs{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.msg{max-width:80%;padding:12px 16px;border-radius:20px;font-size:14px;line-height:1.45;animation:fu .3s ease}
+@keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg.o{background:var(--surface);border:1px solid var(--border);color:var(--text);align-self:flex-start;border-bottom-left-radius:6px}
+.msg.m{background:linear-gradient(135deg,var(--tint),#9B8AE0);color:#111;align-self:flex-end;border-bottom-right-radius:6px;font-weight:500}
+.msg .sn{font-size:11px;font-weight:600;margin-bottom:3px}
+.msg.o .sn{color:var(--text2)}
+.msg.m .sn{color:rgba(0,0,0,.5)}
+.cmp{display:flex;gap:10px;align-items:center;margin-top:16px;padding:10px 14px;border-radius:var(--pill);background:var(--surface);border:1px solid var(--border)}
+.cmp input{flex:1;background:transparent;border:0;outline:0;color:var(--text);font-size:14px;font-family:inherit}
+.cmp button{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--tint),var(--coral));border:0;color:#111;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px}
+
+/* =========== ME =========== */
+.ph{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+.ph .pa{width:56px;height:56px;border-radius:18px;background:linear-gradient(135deg,var(--tint),var(--coral));display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px;color:#111}
+.ph .pn{font-size:20px;font-weight:700;color:var(--text)}
+.ph .pr{font-size:13px;color:var(--text2);margin-top:2px}
+.sg{border-radius:var(--r);overflow:hidden;margin-bottom:10px}
+.sr{display:flex;align-items:center;gap:12px;padding:14px;background:var(--surface);border-bottom:1px solid var(--border);cursor:pointer;transition:.2s}
+.sr:last-child{border-bottom:0}
+.sr:active{background:var(--surface2)}
+.sr .si{width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sr .sl{font-size:14px;font-weight:500;color:var(--text);flex:1}
+.sr .ch{color:var(--text3);font-size:15px}
+
+/* Detail */
+.dh{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.bb{width:36px;height:36px;border-radius:12px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);font-size:18px;flex-shrink:0}
+.bb:active{background:var(--surface2)}
+.dh h2{font-size:22px;font-weight:700;color:var(--text)}
+.detail-card{border-radius:var(--r);padding:18px;background:var(--surface);border:1px solid var(--border);margin-bottom:12px}
+
+.bl{position:absolute;top:8px;right:14px;font-size:12px;color:var(--text3);text-decoration:none;z-index:40}
+</style>
+</head>
+<body>
+
+<div class="device">
+  <div class="sb"><div class="n"></div><span class="t">9:41</span></div>
+
+  <!-- Splash -->
+  <div id="sp">
+    <div class="sp-logo"><div class="r1"></div><div class="r2"></div><span class="ch">C</span></div>
+    <div class="sp-t">CineTrack</div>
+    <div class="sp-st">Artist Workspace</div>
+    <div class="sp-bar"><div></div></div>
+  </div>
+
+  <a class="bl" href="./index.html">← All concepts</a>
+
+  <div class="stack">
+
+    <!-- HOME -->
+    <div class="pg on" id="home">
+      <div class="hero-wrap">
+        <div class="hero-bg"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;position:relative">
+          <div><div class="greet">Good morning,</div><div class="uname">Alex</div></div>
+          <div class="ava" onclick="go('me')">A</div>
+        </div>
+      </div>
+
+      <div class="tmr" onclick="go('work')">
+        <div class="inner">
+          <div><span class="dot"></span><span style="font-size:12px;font-weight:700;color:var(--coral);letter-spacing:.06em">TIMER RUNNING</span></div>
+          <div class="big">01:42:17</div>
+          <div class="sub">SH_220 · Compositing · Roto cleanup</div>
+        </div>
+      </div>
+
+      <div class="bento">
+        <div class="b"><div class="v">5.2h</div><div class="k">Logged</div></div>
+        <div class="b"><div class="v">3</div><div class="k">Queue</div></div>
+        <div class="b"><div class="v">92%</div><div class="k">Score</div></div>
+      </div>
+
+      <div class="lbl" style="margin-top:20px">Shots</div>
+      <div class="strip">
+        <div class="shot" onclick="go('shot')"><div class="sc">SH_221</div><div class="sd">FX · Debris pass</div><div class="st" style="background:rgba(255,122,92,.15);color:var(--coral)">Due 3PM</div></div>
+        <div class="shot" onclick="go('shot')"><div class="sc">SH_125</div><div class="sd">Comp · Client fix</div><div class="st" style="background:rgba(110,231,183,.12);color:var(--mint)">On Track</div></div>
+        <div class="shot"><div class="sc">SH_118</div><div class="sd">Lighting · Final</div><div class="st" style="background:rgba(196,181,253,.12);color:var(--tint)">Tomorrow</div></div>
+      </div>
+
+      <div class="lbl" style="margin-top:18px">Actions</div>
+      <div class="arow">
+        <div class="acell" onclick="go('work')"><div class="ai" style="background:rgba(196,181,253,.12)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--tint)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><span>Log</span></div>
+        <div class="acell"><div class="ai" style="background:rgba(125,211,252,.12)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sky)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><span>Leave</span></div>
+        <div class="acell"><div class="ai" style="background:rgba(110,231,183,.12)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--mint)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6"/><circle cx="12" cy="16" r="0.5" fill="var(--mint)"/></svg></div><span>Focus</span></div>
+        <div class="acell"><div class="ai" style="background:rgba(255,122,92,.12)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--coral)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg></div><span>Expense</span></div>
+      </div>
+    </div>
+
+    <!-- WORK -->
+    <div class="pg r" id="work">
+      <h2 style="font-size:26px;font-weight:800;letter-spacing:-.5px;margin-bottom:14px">Timesheet</h2>
+
+      <div class="lbl">February 2026</div>
+      <div class="wcal">
+        <div class="wd"><div class="dd">Mon</div><div class="dn">23</div></div>
+        <div class="wd"><div class="dd">Tue</div><div class="dn">24</div></div>
+        <div class="wd"><div class="dd">Wed</div><div class="dn">25</div></div>
+        <div class="wd ac"><div class="dd">Thu</div><div class="dn">26</div></div>
+        <div class="wd"><div class="dd">Fri</div><div class="dn">27</div></div>
+        <div class="wd"><div class="dd">Sat</div><div class="dn">28</div></div>
+      </div>
+
+      <div class="lbl" style="margin-top:18px">Entries</div>
+      <div class="trow" onclick="go('shot')"><div class="th">2.5h</div><div><div class="tp">SH_220 · Compositing</div><div class="tn">Roto cleanup + edge blend</div></div><div class="td" style="background:var(--mint)"></div></div>
+      <div class="trow"><div class="th">1.5h</div><div><div class="tp">SH_221 · FX Debris</div><div class="tn">Particle sim v2</div></div><div class="td" style="background:var(--tint)"></div></div>
+      <div class="trow"><div class="th">1.0h</div><div><div class="tp">SH_125 · Client Fix</div><div class="tn">Color grade tweak</div></div><div class="td" style="background:var(--sky)"></div></div>
+
+      <button class="pbtn p" style="margin-top:18px">+ Log New Entry</button>
+    </div>
+
+    <!-- CHAT -->
+    <div class="pg r" id="chat">
+      <h2 style="font-size:26px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px">Messages</h2>
+      <div style="font-size:13px;color:var(--text3);margin-bottom:14px">4 conversations</div>
+
+      <div class="rm" onclick="go('chatroom')"><div class="rma" style="background:linear-gradient(135deg,var(--tint),var(--sky))">PA</div><div style="flex:1;min-width:0"><div class="rn">Project Alpha</div><div class="rp">Lead: "Lens flare softer by 20%"</div></div><div class="ubadge">3</div></div>
+      <div class="rm" onclick="go('chatroom')"><div class="rma" style="background:linear-gradient(135deg,var(--coral),#FDBA74)">S</div><div style="flex:1;min-width:0"><div class="rn">Sarah · Supervisor</div><div class="rp">Approved your leave request</div></div><div class="rt">2m</div></div>
+      <div class="rm" onclick="go('chatroom')"><div class="rma" style="background:linear-gradient(135deg,var(--mint),var(--sky))">TF</div><div style="flex:1;min-width:0"><div class="rn">Team FX</div><div class="rp">Mike: "Render farm back online"</div></div><div class="rt">15m</div></div>
+      <div class="rm"><div class="rma" style="background:rgba(255,255,255,.08)">G</div><div style="flex:1;min-width:0"><div class="rn">General</div><div class="rp">Standup notes posted</div></div><div class="rt">1h</div></div>
+    </div>
+
+    <!-- CHAT ROOM -->
+    <div class="pg r" id="chatroom">
+      <div class="dh"><div class="bb" onclick="go('chat')">←</div><h2>Project Alpha</h2></div>
+      <div class="msgs">
+        <div class="msg o"><div class="sn">Lead</div>Need the lens flare softer by 20%.</div>
+        <div class="msg m"><div class="sn">You</div>Updated pass sent for review.</div>
+        <div class="msg o"><div class="sn">Producer</div>Approved. Proceed to final export.</div>
+        <div class="msg m"><div class="sn">You</div>Final comp rendering now. ETA 40 min.</div>
+        <div class="msg o"><div class="sn">Lead</div>Great work today. Let's wrap this sequence.</div>
+      </div>
+      <div class="cmp"><input placeholder="Type a message..."/><button>↑</button></div>
+    </div>
+
+    <!-- ME -->
+    <div class="pg r" id="me">
+      <h2 style="font-size:26px;font-weight:800;letter-spacing:-.5px;margin-bottom:18px">Profile</h2>
+      <div class="ph">
+        <div class="pa">AK</div>
+        <div><div class="pn">Alex Kumar</div><div class="pr">Senior Compositor · Team Alpha</div></div>
+      </div>
+      <div class="lbl">Settings</div>
+      <div class="sg">
+        <div class="sr"><div class="si" style="background:rgba(196,181,253,.12)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--tint)" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><span class="sl">Edit Profile</span><span class="ch">›</span></div>
+        <div class="sr"><div class="si" style="background:rgba(125,211,252,.12)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--sky)" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div><span class="sl">Notifications</span><span class="ch">›</span></div>
+        <div class="sr"><div class="si" style="background:rgba(110,231,183,.12)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--mint)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div><span class="sl">Location</span><span class="ch">›</span></div>
+      </div>
+      <div class="lbl">Account</div>
+      <div class="sg">
+        <div class="sr"><div class="si" style="background:rgba(239,68,68,.12)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg></div><span class="sl" style="color:#EF4444">Sign Out</span><span class="ch">›</span></div>
+      </div>
+    </div>
+
+    <!-- SHOT DETAIL -->
+    <div class="pg r" id="shot">
+      <div class="dh"><div class="bb" onclick="back()">←</div><h2>SH_221</h2></div>
+      <div class="detail-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--tint);letter-spacing:.08em">FX DEPARTMENT</div>
+            <div style="font-size:20px;font-weight:700;color:var(--text);margin-top:4px">Debris Pass</div>
+          </div>
+          <div style="padding:5px 10px;border-radius:var(--pill);background:rgba(110,231,183,.12);border:1px solid rgba(110,231,183,.25);font-size:11px;font-weight:600;color:var(--mint)">In Progress</div>
+        </div>
+        <div style="display:flex;gap:20px;margin-top:16px">
+          <div><div style="font-size:10px;color:var(--text3)">BID</div><div style="font-size:16px;font-weight:700;color:var(--text)">4.0h</div></div>
+          <div><div style="font-size:10px;color:var(--text3)">ACTUAL</div><div style="font-size:16px;font-weight:700;color:var(--coral)">3.2h</div></div>
+          <div><div style="font-size:10px;color:var(--text3)">DUE</div><div style="font-size:16px;font-weight:700;color:var(--text)">3 PM</div></div>
+        </div>
+      </div>
+      <div class="lbl">Activity</div>
+      <div class="trow"><div style="font-size:12px;color:var(--text3);min-width:60px">10:20</div><div><div class="tp">Started particle sim v2</div></div></div>
+      <div class="trow"><div style="font-size:12px;color:var(--text3);min-width:60px">11:45</div><div><div class="tp">Cache rendered — 340 frames</div></div></div>
+      <button class="pbtn p" style="margin-top:16px">Log Time</button>
+    </div>
+
+  </div>
+
+  <!-- Tabs -->
+  <nav class="tabs">
+    <div class="ti on" onclick="tab('home',this)"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></div>
+    <div class="ti" onclick="tab('work',this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Work</span></div>
+    <div class="ti" onclick="tab('chat',this)"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span>Chat</span></div>
+    <div class="ti" onclick="tab('me',this)"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Me</span></div>
+  </nav>
+</div>
+
+<script>
+const mains=['home','work','chat','me'];
+let hist=['home'],cur='home';
+setTimeout(()=>document.getElementById('sp').classList.add('go'),2400);
+
+function show(id,dir){
+  document.querySelectorAll('.pg').forEach(p=>{
+    if(p.id===id){p.className='pg on'}
+    else if(dir==='f'){p.className=p.id===cur?'pg l':'pg r'}
+    else{p.className=p.id===cur?'pg r':'pg l'}
+  });
+  cur=id;
+}
+function tab(id,el){
+  document.querySelectorAll('.ti').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  const i=mains.indexOf(id),c=mains.indexOf(cur);
+  show(id,i>=c?'f':'b');
+  hist=[id];
+}
+function go(id){hist.push(id);show(id,'f');if(!mains.includes(id))document.querySelectorAll('.ti').forEach(t=>t.classList.remove('on'))}
+function back(){hist.pop();const p=hist[hist.length-1]||'home';show(p,'b');if(mains.includes(p))document.querySelectorAll('.ti').forEach((t,i)=>t.classList.toggle('on',mains[i]===p))}
+</script>
+</body>
+</html>

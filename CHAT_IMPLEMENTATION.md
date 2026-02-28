@@ -27,7 +27,9 @@ Chat has been implemented for ctrack_mobile with a Supabase-backed backend in ct
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/v1/mobile/chat/rooms` | List rooms for current user |
+| GET | `/api/v1/mobile/chat/users` | List all users (for chat picker, excludes current user) |
 | POST | `/api/v1/mobile/chat/rooms` | Create room (`{ type: 'direct'\|'project', otherUserId?, projectId? }`) |
+| POST | `/api/v1/mobile/chat/cleanup` | Delete messages older than 1 month (call daily via cron) |
 | GET | `/api/v1/mobile/chat/rooms/[id]` | Get single room |
 | GET | `/api/v1/mobile/chat/rooms/[id]/messages` | Paginated messages (`?limit=50&before=<msgId>`) |
 | POST | `/api/v1/mobile/chat/rooms/[id]/messages` | Send message (`{ content: string }`) |
@@ -41,6 +43,7 @@ Chat has been implemented for ctrack_mobile with a Supabase-backed backend in ct
 | Hook | Purpose |
 |------|---------|
 | `useChatRooms()` | Room list with last message, unread count |
+| `useChatUsers()` | All users (for starting new DMs) |
 | `useChatRoom(roomId)` | Single room details |
 | `useChatMessages(roomId)` | Paginated messages + Realtime subscription |
 | `useSendMessage(roomId)` | Send text message |
@@ -48,7 +51,7 @@ Chat has been implemented for ctrack_mobile with a Supabase-backed backend in ct
 
 ### Screens
 
-- **`app/(tabs)/chat.tsx`** – Room list with last message preview, unread badge, pull-to-refresh. Tap to navigate to room.
+- **`app/(tabs)/chat.tsx`** – Recent chats + user list. Tap a room to open thread; tap a user to create DM and open thread. Search users.
 - **`app/chat/[roomId].tsx`** – Room view with message list (newest at bottom), text input + Send, optimistic send, paginate older on scroll up.
 
 ---
@@ -109,8 +112,35 @@ router.push(`/chat/${room.id}`);
 
 ---
 
+## Auto-delete old messages
+
+Migration `084_chat_auto_delete_old_messages.sql` adds `delete_old_chat_messages()` which removes messages older than 1 month. Call daily via:
+
+- **Vercel Cron** (if ctrack_v0 is on Vercel): Add to `vercel.json`:
+  ```json
+  "crons": [{ "path": "/api/v1/mobile/chat/cleanup", "schedule": "0 3 * * *" }]
+  ```
+- **Supabase pg_cron** (Pro plan): Schedule `SELECT delete_old_chat_messages();`
+- **External cron**: `curl -X POST -H "Authorization: Bearer <token>" https://your-api/api/v1/mobile/chat/cleanup`
+
+---
+
+## WhatsApp integration
+
+**Is it possible?** Partially, with significant constraints.
+
+| Approach | Feasibility | Notes |
+|----------|-------------|-------|
+| **WhatsApp Business Cloud API** | Yes | Requires Meta Business verification, approval. Send/receive via WhatsApp; chat happens IN WhatsApp, not in our app. |
+| **WhatsApp as notification channel** | Yes | Push "New message from X" with deep link to open our in-app chat. User still chats in CTrack. |
+| **Two-way sync (our app ↔ WhatsApp)** | Very complex | Would need a bridge service, WhatsApp Business API, message routing. High dev effort, Meta approval, ongoing maintenance. |
+
+**Recommendation**: Use WhatsApp only for notifications (e.g. "You have a new message") linking to the in-app chat. Full two-way sync is rarely worth the complexity for internal team chat.
+
+---
+
 ## Deferred / Future
 
-- Attachment upload (Phase 4) – `attachmentId` is supported in `sendMessage`; UI and upload flow TBD.
+- Attachment upload – `attachmentId` is supported; media (image/audio) flow exists via chat-media API.
 - Mark as read (update `chat_room_members.last_read_at`) – unread count is simplified (0 or 1).
 - Retry on send fail – optimistic message shows "Failed to send"; retry button can be added.

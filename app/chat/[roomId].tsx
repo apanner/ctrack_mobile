@@ -25,6 +25,7 @@ import { colors } from '../../constants/colors';
 import { supabase } from '../../lib/supabase';
 import { GlassCard } from '../../components/GlassCard';
 import { uiTokens } from '../../constants/ui-tokens';
+import { useChatSounds } from '../../hooks/useChatSounds';
 
 export default function ChatRoomScreen() {
   const { roomId } = useLocalSearchParams<{ roomId: string }>();
@@ -37,6 +38,30 @@ export default function ChatRoomScreen() {
     });
   }, []);
 
+  useEffect(() => {
+    if (!roomId || !userId) return;
+    const channel = supabase
+      .channel(`room-sounds:${roomId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chat_messages',
+          filter: `room_id=eq.${roomId}`,
+        },
+        (payload: { record?: { sender_id?: string } }) => {
+          const senderId = payload.record?.sender_id;
+          if (senderId && senderId !== userId) {
+            playReceiveSound();
+          }
+        }
+      )
+      .subscribe();
+    return () => supabase.removeChannel(channel);
+  }, [roomId, userId, playReceiveSound]);
+
+  const { playSendSound, playReceiveSound } = useChatSounds();
   const { data: room, isLoading: roomLoading } = useChatRoom(roomId ?? null);
   const {
     data: messages = [],
@@ -76,12 +101,13 @@ export default function ChatRoomScreen() {
       try {
         await sendMutation.mutateAsync({ content: text, attachmentId });
         setOptimisticMessages((prev) => prev.filter((m) => m.id !== tempId));
+        playSendSound();
       } catch {
         setFailedIds((prev) => new Set(prev).add(tempId));
         setOptimisticMessages((prev) => prev.filter((m) => m.id !== tempId));
       }
     },
-    [roomId, userId, sendMutation]
+    [roomId, userId, sendMutation, playSendSound]
   );
 
   const handleScroll = useCallback(

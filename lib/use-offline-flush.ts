@@ -16,6 +16,8 @@ export function useOfflineFlush() {
         flushQueue().then(({ success }) => {
           if (success > 0) {
             queryClient.invalidateQueries({ queryKey: ['timesheets'] });
+            queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+            queryClient.invalidateQueries({ queryKey: ['offline-queue'] });
           }
         });
       }

@@ -1,13 +1,16 @@
 import {
   View,
+  Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
   Alert,
   ActivityIndicator,
+  Modal,
+  Pressable,
 } from 'react-native';
 import { useState, useCallback } from 'react';
-import { Send, Image, Mic, Square } from 'lucide-react-native';
+import { Send, Plus, Image, Mic, Square, Smile, Film } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import {
@@ -19,6 +22,8 @@ import {
 } from 'expo-audio';
 import { colors } from '../constants/colors';
 import { useUploadChatMedia, uriToBlob } from '../lib/api/chat-media';
+import { EmojiPicker } from './chat/EmojiPicker';
+import { GifPicker } from './chat/GifPicker';
 
 interface ChatInputProps {
   roomId: string;
@@ -29,6 +34,9 @@ interface ChatInputProps {
 export function ChatInput({ roomId, onSend, disabled }: ChatInputProps) {
   const [message, setMessage] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [attachOpen, setAttachOpen] = useState(false);
+  const [emojiOpen, setEmojiOpen] = useState(false);
+  const [gifOpen, setGifOpen] = useState(false);
   const { uploadImage: doUploadImage, uploadAudio: doUploadAudio } = useUploadChatMedia();
 
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
@@ -41,7 +49,19 @@ export function ChatInput({ roomId, onSend, disabled }: ChatInputProps) {
     }
   }, [message, onSend, disabled]);
 
+  const handleEmojiSelect = useCallback((emoji: string) => {
+    setMessage((m) => m + emoji);
+  }, []);
+
+  const handleGifSelect = useCallback(
+    (gifUrl: string) => {
+      onSend(gifUrl);
+    },
+    [onSend]
+  );
+
   const handlePickImage = useCallback(async () => {
+    setAttachOpen(false);
     if (disabled || uploading) return;
 
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -94,6 +114,7 @@ export function ChatInput({ roomId, onSend, disabled }: ChatInputProps) {
   }, [roomId, onSend, disabled, uploading, doUploadImage]);
 
   const handleStartRecording = useCallback(async () => {
+    setAttachOpen(false);
     if (disabled || uploading) return;
 
     const status = await AudioModule.requestRecordingPermissionsAsync();
@@ -143,43 +164,41 @@ export function ChatInput({ roomId, onSend, disabled }: ChatInputProps) {
     }
   }, [roomId, onSend, audioRecorder, recorderState, doUploadAudio]);
 
+  const openEmoji = useCallback(() => {
+    setAttachOpen(false);
+    setEmojiOpen(true);
+  }, []);
+
+  const openGif = useCallback(() => {
+    setAttachOpen(false);
+    setGifOpen(true);
+  }, []);
+
   const isRecording = recorderState.isRecording;
   const canSend = message.trim() && !disabled && !uploading;
 
   return (
     <View style={styles.container}>
-      <View style={styles.actionsRow}>
+      {!isRecording ? (
         <TouchableOpacity
           style={[styles.attachButton, (disabled || uploading) && styles.buttonDisabled]}
-          onPress={handlePickImage}
+          onPress={() => setAttachOpen(true)}
           disabled={disabled || uploading}
           accessibilityRole="button"
-          accessibilityLabel="Attach image"
+          accessibilityLabel="Add attachment"
         >
-          <Image size={22} color={colors.textSecondary} />
+          <Plus size={24} color={colors.textSecondary} />
         </TouchableOpacity>
-
-        {!isRecording ? (
-          <TouchableOpacity
-            style={[styles.attachButton, (disabled || uploading) && styles.buttonDisabled]}
-            onPress={handleStartRecording}
-            disabled={disabled || uploading}
-            accessibilityRole="button"
-            accessibilityLabel="Record voice message"
-          >
-            <Mic size={22} color={colors.textSecondary} />
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            style={[styles.attachButton, styles.recordButton]}
-            onPress={handleStopRecording}
-            accessibilityRole="button"
-            accessibilityLabel="Stop recording"
-          >
-            <Square size={22} color="#E53935" fill="#E53935" />
-          </TouchableOpacity>
-        )}
-      </View>
+      ) : (
+        <TouchableOpacity
+          style={[styles.attachButton, styles.recordButton]}
+          onPress={handleStopRecording}
+          accessibilityRole="button"
+          accessibilityLabel="Stop recording"
+        >
+          <Square size={22} color="#E53935" fill="#E53935" />
+        </TouchableOpacity>
+      )}
 
       <TextInput
         style={styles.input}
@@ -205,6 +224,36 @@ export function ChatInput({ roomId, onSend, disabled }: ChatInputProps) {
           <Send size={20} color="#FFFFFF" />
         )}
       </TouchableOpacity>
+
+      <Modal visible={attachOpen} transparent animationType="fade">
+        <Pressable style={styles.attachOverlay} onPress={() => setAttachOpen(false)}>
+          <View style={styles.attachMenu}>
+            <TouchableOpacity style={styles.attachMenuItem} onPress={openEmoji}>
+              <Smile size={24} color={colors.accent} />
+              <Text style={styles.attachMenuLabel}>Emoji</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.attachMenuItem} onPress={openGif}>
+              <Film size={24} color={colors.accent} />
+              <Text style={styles.attachMenuLabel}>GIF</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.attachMenuItem} onPress={handlePickImage}>
+              <Image size={24} color={colors.accent} />
+              <Text style={styles.attachMenuLabel}>Image</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.attachMenuItem} onPress={handleStartRecording}>
+              <Mic size={24} color={colors.accent} />
+              <Text style={styles.attachMenuLabel}>Audio</Text>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
+
+      <EmojiPicker
+        visible={emojiOpen}
+        onClose={() => setEmojiOpen(false)}
+        onSelect={handleEmojiSelect}
+      />
+      <GifPicker visible={gifOpen} onClose={() => setGifOpen(false)} onSelect={handleGifSelect} />
     </View>
   );
 }
@@ -217,9 +266,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.backgroundSecondary,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-  },
-  actionsRow: {
-    flexDirection: 'row',
   },
   attachButton: {
     padding: 10,
@@ -254,5 +300,29 @@ const styles = StyleSheet.create({
   sendButtonDisabled: {
     backgroundColor: colors.backgroundTertiary,
     opacity: 0.5,
+  },
+  attachOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  attachMenu: {
+    position: 'absolute',
+    bottom: 80,
+    left: 16,
+    right: 16,
+    backgroundColor: colors.backgroundSecondary,
+    borderRadius: 16,
+    flexDirection: 'row',
+    padding: 12,
+  },
+  attachMenuItem: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 12,
+  },
+  attachMenuLabel: {
+    fontSize: 12,
+    color: colors.text,
+    marginTop: 4,
   },
 });

@@ -182,3 +182,21 @@ export function useCreateChatRoom() {
   });
 }
 
+export interface ChatUser {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+}
+
+async function fetchChatUsers(): Promise<ChatUser[]> {
+  const res = await apiJson<{ data: ChatUser[] }>('/api/v1/mobile/chat/users');
+  return res.data ?? [];
+}
+
+export function useChatUsers() {
+  return useQuery({
+    queryKey: ['chat', 'users'],
+    queryFn: fetchChatUsers,
+  });
+}
+

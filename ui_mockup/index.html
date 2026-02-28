@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CTrack UI Mockups — Pick Your Design</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, sans-serif;
+      background: #050506;
+      color: #f9fafb;
+      min-height: 100vh;
+      padding: 32px 24px;
+    }
+    .wrap { max-width: 980px; margin: 0 auto; }
+    h1 { margin: 0 0 6px; font-size: 32px; font-weight: 800; letter-spacing: -.5px; }
+    .sub { margin: 0 0 32px; color: #71717a; font-size: 14px; }
+    .divider { height: 1px; background: rgba(255,255,255,.06); margin: 28px 0 24px; }
+    .group-label { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #52525b; margin-bottom: 14px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+    a.card {
+      text-decoration: none; color: inherit;
+      border: 1px solid rgba(255,255,255,.07);
+      background: rgba(255,255,255,.03);
+      border-radius: 20px; padding: 20px;
+      transition: transform .2s ease, border-color .25s ease, box-shadow .25s ease;
+      position: relative; overflow: hidden;
+    }
+    a.card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent);
+    }
+    a.card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,.18); box-shadow: 0 12px 40px rgba(0,0,0,.4); }
+    .badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px; margin-bottom: 10px; letter-spacing: .04em; }
+    .title { font-weight: 700; font-size: 17px; margin-bottom: 6px; }
+    .meta { color: #a1a1aa; font-size: 13px; line-height: 1.45; }
+    .feat { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .feat span { font-size: 10px; padding: 4px 8px; border-radius: 999px; border: 1px solid rgba(255,255,255,.08); color: #a1a1aa; }
+    .run { margin-top: 32px; color: #52525b; font-size: 13px; line-height: 1.6; }
+    .run code { background: rgba(255,255,255,.06); padding: 2px 6px; border-radius: 4px; color: #a1a1aa; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>CTrack Mobile UI Concepts</h1>
+    <p class="sub">14 interactive mockups. Full-flow designs include splash, home, work, chat, profile, shot detail with slide transitions. No backend — run locally.</p>
+    <p style="margin-bottom:24px"><a href="./all-designs.html" style="color:#22d3ee;text-decoration:none;font-weight:600;font-size:15px">→ View all designs horizontally on one page</a></p>
+
+    <div class="group-label">Earlier concepts (A–C)</div>
+    <section class="grid">
+      <a class="card" href="./design-a.html">
+        <span class="badge" style="background:rgba(34,211,238,.15);color:#67e8f9">A</span>
+        <div class="title">Aurora Glass</div>
+        <div class="meta">Gradient glass + cinematic chips. 3 screens only.</div>
+      </a>
+      <a class="card" href="./design-b.html">
+        <span class="badge" style="background:rgba(255,255,255,.08);color:#d4d4d8">B</span>
+        <div class="title">Neo Minimal</div>
+        <div class="meta">Clean monochrome + bold typography. 3 screens only.</div>
+      </a>
+      <a class="card" href="./design-c.html">
+        <span class="badge" style="background:rgba(56,189,248,.12);color:#7dd3fc">C</span>
+        <div class="title">Control Room</div>
+        <div class="meta">Mission dashboard + timeline. 3 screens only.</div>
+      </a>
+    </section>
+
+    <div class="divider"></div>
+
+    <div class="group-label">Full native-feeling mockups (D–F) — recommended</div>
+    <section class="grid">
+      <a class="card" href="./design-d.html">
+        <span class="badge" style="background:rgba(0,229,255,.12);color:#00E5FF">D</span>
+        <div class="title">Obsidian Pulse</div>
+        <div class="meta">True-black OLED + cyan neon accents + coral timer glow. Clean, spacious bento layout with iOS Dynamic Island-style timer pill.</div>
+        <div class="feat">
+          <span>Splash</span><span>Home</span><span>Work</span><span>Chat</span>
+          <span>Chat Room</span><span>Profile</span><span>Shot Detail</span>
+          <span>Floating Tab Bar</span><span>Slide Transitions</span>
+        </div>
+      </a>
+      <a class="card" href="./design-e.html">
+        <span class="badge" style="background:rgba(196,181,253,.12);color:#C4B5FD">E</span>
+        <div class="title">Liquid Ink</div>
+        <div class="meta">Lavender-to-coral gradient identity. Rotating conic-gradient on timer card. Soft luminous surfaces with ink-like accent blends.</div>
+        <div class="feat">
+          <span>Splash</span><span>Home</span><span>Work</span><span>Chat</span>
+          <span>Chat Room</span><span>Profile</span><span>Shot Detail</span>
+          <span>Floating Tab Bar</span><span>Slide Transitions</span>
+        </div>
+      </a>
+      <a class="card" href="./design-f.html">
+        <span class="badge" style="background:rgba(255,87,51,.12);color:#FF5733">F</span>
+        <div class="title">Carbon Noir</div>
+        <div class="meta">Pure black + fire-orange accents. Compact dock-style tab bar. Cinematic glow on timer. Tightest, most native-feeling layout.</div>
+        <div class="feat">
+          <span>Splash</span><span>Home</span><span>Work</span><span>Chat</span>
+          <span>Chat Room</span><span>Profile</span><span>Shot Detail</span>
+          <span>Compact Dock</span><span>Slide Transitions</span>
+        </div>
+      </a>
+    </section>
+
+    <div class="divider"></div>
+
+    <div class="group-label">Trendy & Colorful (G–H)</div>
+    <section class="grid">
+      <a class="card" href="./design-g.html">
+        <span class="badge" style="background:linear-gradient(135deg,rgba(99,102,241,.2),rgba(236,72,153,.2));color:#A78BFA">G</span>
+        <div class="title">Daylight Studio</div>
+        <div class="meta">White/light background. Vibrant indigo-pink-amber gradient splash and timer. Bright, airy iOS feel with colorful accents on clean white cards.</div>
+        <div class="feat">
+          <span>Light Mode</span><span>White BG</span><span>Gradient Splash</span><span>Hour Chips</span>
+          <span>7 Screens</span><span>Slide Transitions</span>
+        </div>
+      </a>
+      <a class="card" href="./design-h.html">
+        <span class="badge" style="background:linear-gradient(135deg,rgba(244,114,182,.2),rgba(34,211,238,.15));color:#F472B6">H</span>
+        <div class="title">Neon Prism</div>
+        <div class="meta">Dark with vivid pink-violet-cyan-green multi-color palette. Mesh gradient timer glow, rainbow-coded shot borders, gradient chat bubbles. Most colorful VFX-themed design.</div>
+        <div class="feat">
+          <span>Multi-color</span><span>Mesh Gradients</span><span>Animated Glow</span><span>Color-coded Borders</span>
+          <span>7 Screens</span><span>Slide Transitions</span>
+        </div>
+      </a>
+    </section>
+
+    <div class="divider"></div>
+
+    <div class="group-label">D+H Fusion (recommended)</div>
+    <section class="grid">
+      <a class="card" href="./design-dh1.html">
+        <span class="badge" style="background:rgba(244,114,182,.15);color:#F472B6">DH-1</span>
+        <div class="title">Carbon Neon</div>
+        <div class="meta">D's structure + H's palette. True black, crisp neon accents. Pink-violet gradient timer label, color-coded shot borders (pink/cyan/violet/green), gradient chat bubbles. Sharp, intentional color.</div>
+        <div class="feat"><span>D layout</span><span>H colors</span><span>Color-coded cards</span><span>Gradient CTA</span><span>7 screens</span></div>
+      </a>
+      <a class="card" href="./design-dh2.html">
+        <span class="badge" style="background:rgba(34,211,238,.1);color:#22D3EE">DH-2</span>
+        <div class="title">Obsidian Prism</div>
+        <div class="meta">D's structure + H's atmosphere. Mesh gradient on timer, floating animated glow orb, triple-ring splash, gradient top highlight on cards. Softer, more ambient feel.</div>
+        <div class="feat"><span>D layout</span><span>H effects</span><span>Mesh gradients</span><span>Animated glow</span><span>7 screens</span></div>
+      </a>
+    </section>
+
+    <div class="divider"></div>
+
+    <div class="group-label">Apple Glass (3 concepts)</div>
+    <section class="grid">
+      <a class="card" href="./design-frost.html">
+        <span class="badge" style="background:rgba(0,122,255,.15);color:#007AFF">Frost</span>
+        <div class="title">Pure Glass</div>
+        <div class="meta">Light mode. Frosted white glass, System Blue accent. Feels like an Apple system app — Settings/Health. Clean, minimal, single accent.</div>
+        <div class="feat"><span>Light</span><span>White glass</span><span>System Blue</span><span>Native feel</span></div>
+      </a>
+      <a class="card" href="./design-studio-glass.html">
+        <span class="badge" style="background:rgba(255,159,10,.2);color:#FF9F0A">Studio</span>
+        <div class="title">Studio Glass</div>
+        <div class="meta">Dark Control Center style. Amber accent for film/studio feel. Strong blur, depth, layered glass. Built for dark grading bays.</div>
+        <div class="feat"><span>Dark</span><span>Control Center</span><span>Amber accent</span><span>Studio mood</span></div>
+      </a>
+      <a class="card" href="./design-lens.html">
+        <span class="badge" style="background:rgba(90,200,250,.15);color:#5AC8FA">Lens</span>
+        <div class="title">Lens — Depth of Field</div>
+        <div class="meta">Camera/lens metaphor. Circular KPIs, radial gradients, teal accent. Soft depth-of-field feel. Premium, VFX-native.</div>
+        <div class="feat"><span>Teal</span><span>Circular</span><span>Depth of field</span><span>Lens metaphor</span></div>
+      </a>
+    </section>
+
+    <div class="run">
+      Run locally: <code>cd ctrack_mobile/ui_mockup && python -m http.server 8098</code><br/>
+      Then open: <code>http://localhost:8098</code>
+    </div>
+  </main>
+</body>
+</html>

@@ -81,8 +81,8 @@ export function SplashScreen({ onFinish }: { onFinish?: () => void }) {
     <View style={styles.container}>
       <View style={styles.content}>
         
-        {/* Animated CTrack Spinner */}
-        <View style={[styles.centerContent, { width: containerSize, height: containerSize, marginBottom: 40 }]}>
+        {/* design-d logo-ring: dual orbit + C */}
+        <View style={[styles.centerContent, { width: containerSize, height: containerSize }]}>
           {/* Background Glow */}
           <Animated.View 
             style={[
@@ -96,34 +96,28 @@ export function SplashScreen({ onFinish }: { onFinish?: () => void }) {
             ]} 
           />
 
-          {/* Outer spinning gradient ring */}
+          {/* design-d: outer orbit (cyan) */}
           <Animated.View style={[styles.ringContainer, { width: ringSize, height: ringSize, transform: [{ rotate: spin }] }]}>
-            <View style={[styles.ring, { width: ringSize, height: ringSize, borderRadius: ringSize / 2, borderTopColor: colors.cyan }]} />
+            <View style={[styles.ring, { width: ringSize, height: ringSize, borderRadius: ringSize / 2, borderTopColor: '#00E5FF', borderWidth: 2.5 }]} />
           </Animated.View>
 
-          {/* Inner reverse spinning ring */}
+          {/* design-d: inner orbit (purple) reverse */}
           <Animated.View style={[styles.ringContainer, { width: innerRingSize, height: innerRingSize, transform: [{ rotate: reverseSpin }] }]}>
-            <View style={[styles.ring, { width: innerRingSize, height: innerRingSize, borderRadius: innerRingSize / 2, borderBottomColor: '#24E1B1', borderLeftColor: '#24E1B1', opacity: 0.8 }]} />
+            <View style={[styles.ring, { width: innerRingSize, height: innerRingSize, borderRadius: innerRingSize / 2, borderBottomColor: '#B18CFF', borderWidth: 2, opacity: 0.9 }]} />
           </Animated.View>
 
-          {/* Center 'C' */}
-          <Animated.Text style={[styles.centerLetter, { fontSize: containerSize * 0.4, transform: [{ scale }] }]}>
+          {/* Center 'C' — design-d cyan */}
+          <Animated.Text style={[styles.centerLetter, { fontSize: containerSize * 0.4, color: '#00E5FF', transform: [{ scale }], textShadowColor: 'rgba(0,229,255,0.5)' }]}>
             C
           </Animated.Text>
         </View>
         
-        <Text style={styles.title}>CineTrack</Text>
-        
+        <Text style={styles.title}>CTrack</Text>
+        <Text style={styles.subtitle}>VFX Artist Workspace</Text>
         <View style={styles.loaderContainer}>
           <View style={styles.loaderTrack}>
-            <Animated.View 
-              style={[
-                styles.loaderFill, 
-                { width: widthInterpolated }
-              ]} 
-            />
+            <Animated.View style={[styles.loaderFill, { width: widthInterpolated }]} />
           </View>
-          <Text style={styles.loadingText}>INITIALIZING...</Text>
         </View>
       </View>
     </View>
@@ -142,11 +136,17 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   title: {
-    fontSize: 42,
+    fontSize: 28,
     fontWeight: '800',
     color: colors.text,
-    marginBottom: 60,
+    marginTop: 24,
     letterSpacing: -1,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: colors.textTertiary,
+    marginTop: 6,
+    letterSpacing: 0.4,
   },
   loaderContainer: {
     width: width * 0.6,
@@ -154,22 +154,16 @@ const styles = StyleSheet.create({
   },
   loaderTrack: {
     width: '100%',
-    height: 4,
-    backgroundColor: colors.border,
+    height: 3,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 2,
-    marginBottom: 12,
+    marginTop: 40,
     overflow: 'hidden',
   },
   loaderFill: {
     height: '100%',
-    backgroundColor: colors.cyan,
+    backgroundColor: '#00E5FF',
     borderRadius: 2,
-  },
-  loadingText: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    letterSpacing: 2,
-    fontWeight: '600',
   },
   centerContent: {
     alignItems: 'center',
@@ -178,8 +172,7 @@ const styles = StyleSheet.create({
   glow: {
     position: 'absolute',
     borderRadius: 999,
-    backgroundColor: colors.cyan,
-    filter: [{ blur: '30px' }] as any,
+    backgroundColor: '#00E5FF',
   },
   ringContainer: {
     position: 'absolute',
