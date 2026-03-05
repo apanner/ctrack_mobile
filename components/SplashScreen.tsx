@@ -10,7 +10,6 @@ export function SplashScreen({ onFinish }: { onFinish?: () => void }) {
   const pulseValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Progress bar animation
     Animated.timing(progress, {
       toValue: 1,
       duration: 2000,
@@ -19,7 +18,6 @@ export function SplashScreen({ onFinish }: { onFinish?: () => void }) {
       if (onFinish) onFinish();
     });
 
-    // Continuous rotation
     Animated.loop(
       Animated.timing(spinValue, {
         toValue: 1,
@@ -29,7 +27,6 @@ export function SplashScreen({ onFinish }: { onFinish?: () => void }) {
       })
     ).start();
 
-    // Subtle pulse
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseValue, {
@@ -70,7 +67,7 @@ export function SplashScreen({ onFinish }: { onFinish?: () => void }) {
 
   const opacity = pulseValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.6, 1]
+    outputRange: [0.5, 1]
   });
 
   const containerSize = 120;
@@ -80,38 +77,32 @@ export function SplashScreen({ onFinish }: { onFinish?: () => void }) {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        
-        {/* design-d logo-ring: dual orbit + C */}
         <View style={[styles.centerContent, { width: containerSize, height: containerSize }]}>
-          {/* Background Glow */}
-          <Animated.View 
+          <Animated.View
             style={[
-              styles.glow, 
-              { 
-                width: containerSize * 1.5, 
+              styles.glow,
+              {
+                width: containerSize * 1.5,
                 height: containerSize * 1.5,
                 opacity: opacity,
                 transform: [{ scale }]
               }
-            ]} 
+            ]}
           />
 
-          {/* design-d: outer orbit (cyan) */}
           <Animated.View style={[styles.ringContainer, { width: ringSize, height: ringSize, transform: [{ rotate: spin }] }]}>
-            <View style={[styles.ring, { width: ringSize, height: ringSize, borderRadius: ringSize / 2, borderTopColor: '#00E5FF', borderWidth: 2.5 }]} />
+            <View style={[styles.ring, { width: ringSize, height: ringSize, borderRadius: ringSize / 2, borderTopColor: colors.accent, borderWidth: 2.5 }]} />
           </Animated.View>
 
-          {/* design-d: inner orbit (purple) reverse */}
           <Animated.View style={[styles.ringContainer, { width: innerRingSize, height: innerRingSize, transform: [{ rotate: reverseSpin }] }]}>
-            <View style={[styles.ring, { width: innerRingSize, height: innerRingSize, borderRadius: innerRingSize / 2, borderBottomColor: '#B18CFF', borderWidth: 2, opacity: 0.9 }]} />
+            <View style={[styles.ring, { width: innerRingSize, height: innerRingSize, borderRadius: innerRingSize / 2, borderBottomColor: colors.cyan, borderWidth: 2, opacity: 0.9 }]} />
           </Animated.View>
 
-          {/* Center 'C' — design-d cyan */}
-          <Animated.Text style={[styles.centerLetter, { fontSize: containerSize * 0.4, color: '#00E5FF', transform: [{ scale }], textShadowColor: 'rgba(0,229,255,0.5)' }]}>
+          <Animated.Text style={[styles.centerLetter, { fontSize: containerSize * 0.4, color: colors.accent, transform: [{ scale }] }]}>
             C
           </Animated.Text>
         </View>
-        
+
         <Text style={styles.title}>CTrack</Text>
         <Text style={styles.subtitle}>VFX Artist Workspace</Text>
         <View style={styles.loaderContainer}>
@@ -144,7 +135,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 13,
-    color: colors.textTertiary,
+    color: colors.textSecondary,
     marginTop: 6,
     letterSpacing: 0.4,
   },
@@ -155,14 +146,14 @@ const styles = StyleSheet.create({
   loaderTrack: {
     width: '100%',
     height: 3,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: colors.surface,
     borderRadius: 2,
     marginTop: 40,
     overflow: 'hidden',
   },
   loaderFill: {
     height: '100%',
-    backgroundColor: '#00E5FF',
+    backgroundColor: colors.accent,
     borderRadius: 2,
   },
   centerContent: {
@@ -172,7 +163,7 @@ const styles = StyleSheet.create({
   glow: {
     position: 'absolute',
     borderRadius: 999,
-    backgroundColor: '#00E5FF',
+    backgroundColor: colors.meshAccent,
   },
   ringContainer: {
     position: 'absolute',
@@ -187,10 +178,5 @@ const styles = StyleSheet.create({
   centerLetter: {
     position: 'absolute',
     fontWeight: '900',
-    color: colors.cyan,
-    textShadowColor: 'rgba(0, 240, 255, 0.5)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
   }
 });
-

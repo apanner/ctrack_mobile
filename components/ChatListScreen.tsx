@@ -2,7 +2,6 @@ import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
@@ -19,14 +18,14 @@ import {
   useCreateChatRoom,
   type ChatRoomWithMeta,
   type ChatUser,
-} from '../../lib/api/chat';
-import { useCurrentUser } from '../../lib/api/profile';
-import { colors } from '../../constants/colors';
-import { GlassCard } from '../../components/GlassCard';
-import { ScreenContainer } from '../../components/ui/ScreenContainer';
-import { uiTokens } from '../../constants/ui-tokens';
+} from '../lib/api/chat';
+import { useCurrentUser } from '../lib/api/profile';
+import { colors } from '../constants/colors';
+import { GlassCard } from './GlassCard';
+import { ScreenContainer } from './ui/ScreenContainer';
+import { uiTokens } from '../constants/ui-tokens';
 import { LinearGradient } from 'expo-linear-gradient';
-import { motionTokens } from '../../constants/motion-tokens';
+import { motionTokens } from '../constants/motion-tokens';
 
 function RoomItem({ room }: { room: ChatRoomWithMeta }) {
   const preview = room.last_message?.content
@@ -39,14 +38,10 @@ function RoomItem({ room }: { room: ChatRoomWithMeta }) {
     ? formatDistanceToNow(new Date(room.last_message.created_at), { addSuffix: true })
     : '';
 
-  const handlePress = () => {
-    router.push(`/chat/${room.id}`);
-  };
-
   return (
     <TouchableOpacity
       style={styles.roomItemWrap}
-      onPress={handlePress}
+      onPress={() => router.push(`/chat/${room.id}`)}
       activeOpacity={motionTokens.scale.pressIn}
       accessibilityRole="button"
       accessibilityLabel={`${room.name}, ${preview}`}
@@ -96,14 +91,10 @@ function UserItem({
   onCreateAndOpen: (userId: string) => void;
   isCreating: boolean;
 }) {
-  const handlePress = () => {
-    if (!isCreating) onCreateAndOpen(user.id);
-  };
-
   return (
     <TouchableOpacity
       style={styles.userItemWrap}
-      onPress={handlePress}
+      onPress={() => !isCreating && onCreateAndOpen(user.id)}
       activeOpacity={motionTokens.scale.pressIn}
       disabled={isCreating}
       accessibilityRole="button"
@@ -113,7 +104,7 @@ function UserItem({
         <View style={styles.userItem}>
           <View style={styles.userAvatar}>
             <LinearGradient
-              colors={[colors.accent, colors.purple]}
+              colors={[colors.tint, colors.purple]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.userAvatarGradient}
@@ -127,9 +118,9 @@ function UserItem({
             {user.full_name || 'Unknown'}
           </Text>
           {isCreating ? (
-            <ActivityIndicator size="small" color={colors.accent} style={styles.userLoader} />
+            <ActivityIndicator size="small" color={colors.tint} style={styles.userLoader} />
           ) : (
-            <UserPlus size={18} color={colors.textTertiary} />
+            <UserPlus size={18} color={colors.textMuted} />
           )}
         </View>
       </GlassCard>
@@ -137,7 +128,7 @@ function UserItem({
   );
 }
 
-export default function ChatScreen() {
+export function ChatListScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const { data: currentUser } = useCurrentUser();
   const { data: rooms = [], isLoading: roomsLoading, error, refetch, isRefetching } = useChatRooms();
@@ -166,7 +157,6 @@ export default function ChatScreen() {
       router.push(`/chat/${room.id}`);
     } catch (err) {
       console.error('Failed to create chat:', err);
-      // Could show toast
     } finally {
       setCreatingForUserId(null);
     }
@@ -188,7 +178,7 @@ export default function ChatScreen() {
     return (
       <ScreenContainer>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.accent} />
+          <ActivityIndicator size="large" color={colors.tint} />
         </View>
       </ScreenContainer>
     );
@@ -198,17 +188,17 @@ export default function ChatScreen() {
     <ScreenContainer>
       <View style={styles.topBand}>
         <View style={styles.header}>
-        <Text style={styles.title}>Chat</Text>
-        <Text style={styles.subtitle}>Message your team</Text>
+          <Text style={styles.title}>Chat</Text>
+          <Text style={styles.subtitle}>Message your team</Text>
         </View>
       </View>
 
       <View style={styles.searchWrap}>
-        <Search size={18} color={colors.textTertiary} />
+        <Search size={18} color={colors.textMuted} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search users..."
-          placeholderTextColor={colors.textTertiary}
+          placeholderTextColor={colors.textMuted}
           value={searchQuery}
           onChangeText={setSearchQuery}
           returnKeyType="search"
@@ -245,17 +235,17 @@ export default function ChatScreen() {
             <RefreshControl
               refreshing={isRefetching}
               onRefresh={refetch}
-              tintColor={colors.accent}
+              tintColor={colors.tint}
             />
           }
           ListEmptyComponent={
             usersLoading ? (
               <View style={styles.emptyContainer}>
-                <ActivityIndicator size="small" color={colors.accent} />
+                <ActivityIndicator size="small" color={colors.tint} />
               </View>
             ) : (
               <View style={styles.emptyContainer}>
-                <MessageCircle size={48} color={colors.textTertiary} />
+                <MessageCircle size={48} color={colors.textMuted} />
                 <Text style={styles.emptyText}>No users found</Text>
                 <Text style={styles.emptySubtext}>Team members will appear here</Text>
               </View>
@@ -269,32 +259,11 @@ export default function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  header: {
-    paddingHorizontal: uiTokens.spacing.xl,
-    paddingTop: uiTokens.spacing.sm,
-    paddingBottom: uiTokens.spacing.sm,
-    zIndex: 1,
-  },
-  topBand: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-    marginBottom: uiTokens.spacing.sm,
-  },
-  title: {
-    fontSize: uiTokens.text.headline,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  subtitle: {
-    fontSize: uiTokens.text.body,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  header: { paddingHorizontal: uiTokens.spacing.xl, paddingTop: uiTokens.spacing.sm, paddingBottom: uiTokens.spacing.sm, zIndex: 1 },
+  topBand: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border, marginBottom: uiTokens.spacing.sm },
+  title: { fontSize: uiTokens.text.headline, fontWeight: '800', color: colors.text },
+  subtitle: { fontSize: uiTokens.text.body, color: colors.textSecondary, marginTop: 2 },
   searchWrap: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -308,24 +277,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: colors.text,
-    paddingVertical: 4,
-  },
+  searchInput: { flex: 1, fontSize: 16, color: colors.text, paddingVertical: 4 },
   sectionTitle: {
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.08,
-    color: colors.textTertiary,
+    color: colors.textMuted,
     textTransform: 'uppercase',
     marginBottom: 8,
   },
-  listContent: {
-    paddingHorizontal: uiTokens.spacing.xl,
-    paddingBottom: uiTokens.spacing.xxxl,
-  },
+  listContent: { paddingHorizontal: uiTokens.spacing.xl, paddingBottom: uiTokens.spacing.xxxl },
   roomItemWrap: {},
   roomItem: {
     flexDirection: 'row',
@@ -337,42 +298,19 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.backgroundSecondary,
+    backgroundColor: colors.surfaceAccent,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: uiTokens.spacing.md,
   },
-  roomContent: {
-    flex: 1,
-    minWidth: 0,
-  },
-  roomHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  roomName: {
-    fontSize: uiTokens.text.bodyLg,
-    fontWeight: '600',
-    color: colors.text,
-    flex: 1,
-  },
-  timeAgo: {
-    fontSize: uiTokens.text.caption,
-    color: colors.textTertiary,
-  },
-  previewRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 3,
-  },
-  preview: {
-    fontSize: uiTokens.text.body,
-    color: colors.textSecondary,
-    flex: 1,
-  },
+  roomContent: { flex: 1, minWidth: 0 },
+  roomHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  roomName: { fontSize: uiTokens.text.bodyLg, fontWeight: '600', color: colors.text, flex: 1 },
+  timeAgo: { fontSize: uiTokens.text.caption, color: colors.textMuted },
+  previewRow: { flexDirection: 'row', alignItems: 'center', marginTop: 3 },
+  preview: { fontSize: uiTokens.text.body, color: colors.textSecondary, flex: 1 },
   unreadBadge: {
-    backgroundColor: colors.accent,
+    backgroundColor: colors.tint,
     minWidth: 20,
     height: 20,
     borderRadius: 10,
@@ -380,11 +318,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginLeft: 8,
   },
-  unreadText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
+  unreadText: { fontSize: 11, fontWeight: '700', color: '#FFFFFF' },
   userItemWrap: {},
   userItem: {
     flexDirection: 'row',
@@ -392,57 +326,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: uiTokens.spacing.md,
     paddingVertical: uiTokens.spacing.md,
   },
-  userAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    overflow: 'hidden',
-    marginRight: uiTokens.spacing.md,
-  },
-  userAvatarGradient: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  userAvatarText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  userName: {
-    flex: 1,
-    fontSize: uiTokens.text.bodyLg,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  userLoader: {
-    marginLeft: 8,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: uiTokens.spacing.xl,
-  },
-  errorText: {
-    color: colors.error,
-    fontSize: uiTokens.text.body,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 80,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    marginTop: 16,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: colors.textTertiary,
-    marginTop: 8,
-  },
+  userAvatar: { width: 44, height: 44, borderRadius: 22, overflow: 'hidden', marginRight: uiTokens.spacing.md },
+  userAvatarGradient: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  userAvatarText: { fontSize: 18, fontWeight: '700', color: '#FFFFFF' },
+  userName: { flex: 1, fontSize: uiTokens.text.bodyLg, fontWeight: '600', color: colors.text },
+  userLoader: { marginLeft: 8 },
+  errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: uiTokens.spacing.xl },
+  errorText: { color: colors.danger, fontSize: uiTokens.text.body },
+  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 80 },
+  emptyText: { fontSize: 18, fontWeight: '600', color: colors.textSecondary, marginTop: 16 },
+  emptySubtext: { fontSize: 14, color: colors.textMuted, marginTop: 8 },
 });

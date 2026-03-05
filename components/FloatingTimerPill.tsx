@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Pause, Square } from 'lucide-react-native';
 import { colors } from '../constants/colors';
@@ -14,7 +13,7 @@ export function FloatingTimerPill() {
 
   return (
     <View style={[styles.container, { top: insets.top + 12 }]} pointerEvents="box-none">
-      <BlurView intensity={80} tint="dark" style={styles.pill}>
+      <View style={styles.pill}>
         <View style={styles.content}>
           <View style={styles.pulseIndicator} />
           <Text style={styles.label} numberOfLines={1}>
@@ -40,7 +39,7 @@ export function FloatingTimerPill() {
             </TouchableOpacity>
           </View>
         </View>
-      </BlurView>
+      </View>
     </View>
   );
 }
@@ -58,12 +57,12 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    backgroundColor: 'rgba(0,0,0,0.4)', // iOS Dynamic Island feel
-    shadowColor: '#000',
+    borderColor: colors.border,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#1A1D26',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
     elevation: 8,
   },
   content: {
@@ -98,9 +97,9 @@ const styles = StyleSheet.create({
   actionBtn: {
     padding: 8,
     borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: colors.surface,
   },
   stopBtn: {
-    backgroundColor: 'rgba(239,68,68,0.25)',
+    backgroundColor: 'rgba(239,68,68,0.12)',
   },
 });

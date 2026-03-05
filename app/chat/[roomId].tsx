@@ -29,6 +29,7 @@ import { useChatSounds } from '../../hooks/useChatSounds';
 
 export default function ChatRoomScreen() {
   const { roomId } = useLocalSearchParams<{ roomId: string }>();
+  const { playSendSound, playReceiveSound } = useChatSounds();
   const [userId, setUserId] = useState<string | null>(null);
   const flatListRef = useRef<FlatList>(null);
 
@@ -61,7 +62,6 @@ export default function ChatRoomScreen() {
     return () => supabase.removeChannel(channel);
   }, [roomId, userId, playReceiveSound]);
 
-  const { playSendSound, playReceiveSound } = useChatSounds();
   const { data: room, isLoading: roomLoading } = useChatRoom(roomId ?? null);
   const {
     data: messages = [],
@@ -228,7 +228,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: uiTokens.spacing.md,
     paddingVertical: uiTokens.spacing.sm,
-    backgroundColor: colors.backgroundSecondary,
+    backgroundColor: colors.background,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
   },
   backButton: {
     width: 42,

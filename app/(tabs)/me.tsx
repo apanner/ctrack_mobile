@@ -1,5 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { useCurrentUser } from '../../lib/api/profile';
 import { signOut } from '../../lib/auth';
 import { colors } from '../../constants/colors';
@@ -10,6 +9,8 @@ import { PwaInstallBanner } from '../../components/PwaInstallBanner';
 import { useNotifications } from '../../lib/api/notifications';
 import { router } from 'expo-router';
 import { ActivityIndicator } from 'react-native';
+import { DesignDScreen } from '../../components/ui/DesignDScreen';
+import { GlassCard } from '../../components/GlassCard';
 
 export default function MeScreen() {
   const { data: user, isLoading } = useCurrentUser();
@@ -27,21 +28,17 @@ export default function MeScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.accent} />
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Me</Text>
-        </View>
-
+    <DesignDScreen title="Profile" subtitle="Your account and preferences">
+      <View style={styles.content}>
         <View style={styles.profileSection}>
           {user?.avatar_url ? (
             <Image
@@ -64,17 +61,17 @@ export default function MeScreen() {
 
         <View style={styles.infoSection}>
           {user?.department && (
-            <View style={styles.infoItem}>
+            <GlassCard style={styles.infoItem}>
               <Briefcase size={20} color={colors.textSecondary} />
               <Text style={styles.infoText}>{user.department}</Text>
-            </View>
+            </GlassCard>
           )}
-          <View style={styles.infoItem}>
+          <GlassCard style={styles.infoItem}>
             <Mail size={20} color={colors.textSecondary} />
             <Text style={styles.infoText}>
               {user?.id ? `${user.id.substring(0, 8)}...` : 'N/A'}
             </Text>
-          </View>
+          </GlassCard>
         </View>
 
         <LocationSection />
@@ -187,8 +184,8 @@ export default function MeScreen() {
           <LogOut size={20} color={colors.error} />
           <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
+      </View>
+    </DesignDScreen>
   );
 }
 
@@ -197,28 +194,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  scrollView: {
-    flex: 1,
+  content: {
+    gap: 16,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 16,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.text,
-  },
   profileSection: {
     alignItems: 'center',
-    paddingVertical: 32,
-    paddingHorizontal: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
   },
   avatar: {
     width: 100,
@@ -255,8 +242,7 @@ const styles = StyleSheet.create({
     textTransform: 'capitalize',
   },
   infoSection: {
-    paddingHorizontal: 20,
-    marginBottom: 32,
+    marginBottom: 16,
     gap: 12,
   },
   infoItem: {
@@ -265,16 +251,13 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: colors.backgroundSecondary,
-    borderRadius: 12,
   },
   infoText: {
     fontSize: 14,
     color: colors.text,
   },
   menuSection: {
-    paddingHorizontal: 20,
-    marginBottom: 32,
+    marginBottom: 16,
     gap: 12,
   },
   menuItem: {
@@ -283,8 +266,10 @@ const styles = StyleSheet.create({
     gap: 14,
     paddingVertical: 16,
     paddingHorizontal: 16,
-    backgroundColor: colors.backgroundSecondary,
-    borderRadius: 12,
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   menuItemContent: {
     flex: 1,
@@ -299,7 +284,6 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   aboutSection: {
-    paddingHorizontal: 20,
     marginBottom: 32,
   },
   aboutTitle: {
@@ -318,7 +302,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    marginHorizontal: 20,
     marginBottom: 32,
     paddingVertical: 16,
     borderWidth: 1,

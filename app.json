@@ -9,7 +9,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#050506"
+      "backgroundColor": "#0D0F12"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
@@ -19,7 +19,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#050506"
+        "backgroundColor": "#0D0F12"
       },
       "package": "app.rork.cinetrack_mobile"
     },
@@ -28,8 +28,8 @@
       "bundler": "metro",
       "name": "CTrack Artist Manager",
       "shortName": "CTrack",
-      "themeColor": "#FF6B4A",
-      "backgroundColor": "#050506",
+      "themeColor": "#0D0F12",
+      "backgroundColor": "#0D0F12",
       "display": "standalone",
       "orientation": "portrait",
       "icons": [

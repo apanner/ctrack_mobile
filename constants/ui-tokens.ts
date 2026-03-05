@@ -31,10 +31,10 @@ export const uiTokens = {
     lg: 24,
   },
   surface: {
-    glassBackground: 'rgba(16,16,22,0.88)',
+    glassBackground: 'rgba(255,255,255,0.95)',
     glassBorder: colors.border,
-    elevatedShadowOpacity: 0.28,
-    elevatedShadowRadius: 14,
+    elevatedShadowOpacity: 0.08,
+    elevatedShadowRadius: 20,
   },
 } as const;
 

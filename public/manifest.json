@@ -3,8 +3,8 @@
   "short_name": "CTrack",
   "display": "standalone",
   "orientation": "portrait",
-  "theme_color": "#050506",
-  "background_color": "#050506",
+  "theme_color": "#0D0F12",
+  "background_color": "#0D0F12",
   "start_url": "/",
   "icons": [
     {

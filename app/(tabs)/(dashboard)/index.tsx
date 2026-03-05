@@ -1,31 +1,31 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useDashboard } from '../../lib/api/dashboard';
-import { useNotifications } from '../../lib/api/notifications';
-import { useShots } from '../../lib/api/shots';
-import { useCurrentUser } from '../../lib/api/profile';
-import { useAdaptiveLayout } from '../../lib/adaptive-layout';
-import { BrandSpinner } from '../../components/BrandSpinner';
-import { GlassCard } from '../../components/GlassCard';
-import { colors } from '../../constants/colors';
+import { useDashboard } from '../../../lib/api/dashboard';
+import { useNotifications } from '../../../lib/api/notifications';
+import { useShots } from '../../../lib/api/shots';
+import { useCurrentUser } from '../../../lib/api/profile';
+import { useAdaptiveLayout } from '../../../lib/adaptive-layout';
+import { BrandSpinner } from '../../../components/BrandSpinner';
+import { GlassCard } from '../../../components/GlassCard';
+import { colors } from '../../../constants/colors';
 import { router } from 'expo-router';
-import { Timer, Calendar, Target, FileText } from 'lucide-react-native';
+import { FileText, Calendar, Target, MessageCircle } from 'lucide-react-native';
 import { format } from 'date-fns';
-import { ScreenContainer } from '../../components/ui/ScreenContainer';
-import { SectionHeader } from '../../components/ui/SectionHeader';
-import { PrimaryActionButton } from '../../components/ui/PrimaryActionButton';
-import { uiTokens } from '../../constants/ui-tokens';
-import { useTimer, formatElapsedHMS } from '../../contexts/TimerContext';
+import { ScreenContainer } from '../../../components/ui/ScreenContainer';
+import { SectionHeader } from '../../../components/ui/SectionHeader';
+import { PrimaryActionButton } from '../../../components/ui/PrimaryActionButton';
+import { uiTokens } from '../../../constants/ui-tokens';
+import { useTimer, formatElapsedHMS } from '../../../contexts/TimerContext';
 
 const QUICK_ACTIONS = [
-  { key: 'log', label: 'Log Time', icon: Timer, color: colors.cyan, iconBg: colors.meshCyan, onPress: () => router.push('/(tabs)/work') },
+  { key: 'log', label: 'Daily Log', icon: FileText, color: colors.tint, iconBg: colors.meshCyan, onPress: () => router.push('/(tabs)/log') },
   { key: 'leave', label: 'Leave', icon: Calendar, color: colors.purple, iconBg: colors.meshPurple, onPress: () => router.push('/leaves') },
   { key: 'focus', label: 'Focus', icon: Target, color: colors.green, iconBg: colors.meshGreen, onPress: () => router.push('/focus-timer') },
-  { key: 'expense', label: 'Expenses', icon: FileText, color: colors.accent, iconBg: colors.meshAccent, onPress: () => router.push('/expenses') },
+  { key: 'chat', label: 'Chat', icon: MessageCircle, color: colors.accent, iconBg: colors.meshAccent, onPress: () => router.push('/chat') },
 ] as const;
 
-export default function HomeScreen() {
+export default function DashboardScreen() {
   const { spacing } = useAdaptiveLayout();
   const { data: user } = useCurrentUser();
   const { data: dashboard, isLoading: dashLoading, error: dashError } = useDashboard();
@@ -76,7 +76,7 @@ export default function HomeScreen() {
       taskName: typeof taskName === 'string' ? taskName : 'Comp',
       startedAt: new Date(),
     });
-    router.push('/(tabs)/work');
+    router.push('/(tabs)/log');
   };
 
   const isLoading = dashLoading || shotsLoading;
@@ -121,23 +121,23 @@ export default function HomeScreen() {
           <View>
             <Text style={styles.greetingText}>{greeting},</Text>
             <Text style={styles.nameText}>{firstName}</Text>
+            {user?.department && (
+              <View style={styles.deptBadge}>
+                <Text style={styles.deptText}>{user.department}</Text>
+              </View>
+            )}
           </View>
           <Pressable
             onPress={() =>
               unreadNotificationCount > 0
                 ? router.push('/notifications')
-                : router.push('/(tabs)/me')
+                : router.push('/(tabs)/profile')
             }
             style={styles.avatarButton}
           >
-            <LinearGradient
-              colors={[colors.accent, colors.purple]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.avatarGradient}
-            >
+            <View style={[styles.avatarRing, { borderColor: colors.tint }]}>
               <Text style={styles.avatarText}>{initials}</Text>
-            </LinearGradient>
+            </View>
             {unreadNotificationCount > 0 ? (
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>
@@ -150,9 +150,10 @@ export default function HomeScreen() {
 
         <View style={[styles.kpiRow, { paddingHorizontal: spacing.lg }]}>
           {[
-            { value: `${dashboard?.todayHours?.toFixed(1) ?? '0'}h`, label: 'Logged' },
-            { value: String(dashboard?.pendingCount ?? 0), label: 'Pending' },
-            { value: '92%', label: 'Velocity' },
+            { value: String(shots.filter((s) => s.status === 'In Progress' || s.status === 'Not Started').length), label: 'Active' },
+            { value: String(shots.filter((s) => s.status === 'Completed').length), label: 'Done' },
+            { value: String(shots.filter((s) => s.status === 'On Hold' || s.status === 'Revision').length || 0), label: 'Revisions' },
+            { value: '92%', label: 'Productivity' },
           ].map((kpi, i) => (
             <View key={i} style={styles.kpiPill}>
               <Text style={styles.kpiValue}>{kpi.value}</Text>
@@ -163,15 +164,9 @@ export default function HomeScreen() {
 
         <View style={[styles.timerBannerSection, { paddingHorizontal: spacing.lg }]}>
           <Pressable
-            onPress={() => activeTimer ? router.push('/(tabs)/work') : handleStartTimer()}
+            onPress={() => activeTimer ? router.push('/(tabs)/log') : handleStartTimer()}
             style={styles.timerBanner}
           >
-            <LinearGradient
-              colors={['rgba(255,107,74,0.08)', 'rgba(124,58,237,0.06)', 'rgba(0,180,168,0.06)']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={StyleSheet.absoluteFill}
-            />
             <View style={styles.timerBannerInner}>
               {activeTimer ? (
                 <>
@@ -183,21 +178,20 @@ export default function HomeScreen() {
                   <Text style={styles.timerBannerMeta}>
                     {activeTimer.shotCode} · {activeTimer.taskName}
                   </Text>
-                  <PrimaryActionButton label="Continue" onPress={() => router.push('/(tabs)/work')} style={styles.timerBannerBtn} />
+                  <PrimaryActionButton label="Continue" onPress={() => router.push('/(tabs)/log')} style={styles.timerBannerBtn} />
                 </>
               ) : (
                 <>
-                  <Text style={styles.timerBannerHint}>Ready to start your first log?</Text>
-                  <PrimaryActionButton label="Start Timer" onPress={handleStartTimer} style={styles.timerBannerBtn} />
+                  <Text style={styles.timerBannerHint}>Submit your daily log</Text>
+                  <PrimaryActionButton label="Go to Daily Log" onPress={() => router.push('/(tabs)/log')} style={styles.timerBannerBtn} />
                 </>
               )}
             </View>
           </Pressable>
         </View>
 
-        {/* Today's tasks — design-d queue */}
         <View style={[styles.sectionWrap, { paddingHorizontal: spacing.lg }]}>
-          <SectionHeader title="Today's Queue" actionLabel="Open Work" onActionPress={() => router.push('/(tabs)/work')} compact />
+          <SectionHeader title="Urgent Shots" actionLabel="All Shots" onActionPress={() => router.push('/(tabs)/shots')} compact />
           {displayTodayTasks.length > 0 ? (
             <ScrollView
               horizontal
@@ -216,14 +210,14 @@ export default function HomeScreen() {
                 return (
                   <Pressable
                     key={item.id}
-                    onPress={() => shotId && router.push(`/shot/${shotId}`)}
+                    onPress={() => shotId && router.push(`/(tabs)/shots/${shotId}`)}
                     style={styles.queueCardWrap}
                   >
                     <GlassCard noPadding>
                       <View style={styles.queueCardContent}>
                         <Text style={styles.queueCode}>{label}</Text>
                         <Text style={styles.queueDept}>{dept}</Text>
-                        <Text style={[styles.queueDue, isOverdue ? { color: colors.red } : { color: colors.accent }]}>
+                        <Text style={[styles.queueDue, isOverdue ? { color: colors.danger } : { color: colors.tint }]}>
                           {item.due_date ? `Due ${format(new Date(item.due_date), 'h:mm a')}` : 'On Track'}
                         </Text>
                       </View>
@@ -239,16 +233,11 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* Quick actions — design-d */}
         <View style={[styles.sectionWrap, { paddingHorizontal: spacing.lg }]}>
           <SectionHeader title="Quick Actions" compact />
           <View style={styles.shortcutsGrid}>
             {QUICK_ACTIONS.map((action) => (
-              <Pressable
-                key={action.key}
-                style={styles.shortcutCell}
-                onPress={action.onPress}
-              >
+              <Pressable key={action.key} style={styles.shortcutCell} onPress={action.onPress}>
                 <View style={[styles.shortcutIcon, { backgroundColor: action.iconBg }]}>
                   <action.icon size={20} color={action.color} strokeWidth={2} />
                 </View>
@@ -263,9 +252,7 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
-  },
+  scrollView: { flex: 1 },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -273,172 +260,79 @@ const styles = StyleSheet.create({
     marginTop: uiTokens.spacing.lg,
     marginBottom: uiTokens.spacing.md,
   },
-  greetingText: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    fontWeight: '600',
+  greetingText: { fontSize: 13, color: colors.textSecondary, fontWeight: '600' },
+  nameText: { fontSize: 28, fontWeight: '800', color: colors.text, letterSpacing: -0.6, marginTop: 2 },
+  deptBadge: {
+    marginTop: 4,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+    backgroundColor: colors.surfaceAccent,
   },
-  nameText: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: colors.text,
-    letterSpacing: -0.6,
-    marginTop: 2,
-  },
-  avatarButton: {
+  deptText: { fontSize: 11, fontWeight: '600', color: colors.tint, textTransform: 'uppercase' },
+  avatarButton: { width: 44, height: 44, borderRadius: 22, overflow: 'hidden' },
+  avatarRing: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    overflow: 'hidden',
-  },
-  avatarGradient: {
-    flex: 1,
+    borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: colors.accent,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 4,
+    backgroundColor: colors.surface,
   },
-  avatarText: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#FFF',
-  },
+  avatarText: { fontSize: 16, fontWeight: '800', color: colors.text },
   badge: {
     position: 'absolute',
-    top: 3,
-    right: 3,
+    top: 0,
+    right: 0,
     minWidth: 16,
     height: 16,
     borderRadius: 8,
     paddingHorizontal: 3,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.accent,
+    backgroundColor: colors.danger,
   },
-  badgeText: {
-    color: '#FFF',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  kpiRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: uiTokens.spacing.lg,
-  },
+  badgeText: { color: '#FFF', fontSize: 10, fontWeight: '700' },
+  kpiRow: { flexDirection: 'row', gap: 10, marginBottom: uiTokens.spacing.lg },
   kpiPill: {
     flex: 1,
-    paddingVertical: 14,
+    paddingVertical: 12,
     paddingHorizontal: 8,
     alignItems: 'center',
-    borderRadius: 20,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
   },
-  kpiValue: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  kpiLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.textTertiary,
-    marginTop: 4,
-    textTransform: 'uppercase',
-  },
-  timerBannerSection: {
-    marginBottom: uiTokens.spacing.xl,
-  },
+  kpiValue: { fontSize: 18, fontWeight: '800', color: colors.text },
+  kpiLabel: { fontSize: 10, fontWeight: '600', color: colors.textMuted, marginTop: 4, textTransform: 'uppercase' },
+  timerBannerSection: { marginBottom: uiTokens.spacing.xl },
   timerBanner: {
-    borderRadius: 28,
+    borderRadius: 14,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.surfaceElevated,
-    minHeight: 140,
+    backgroundColor: colors.surface,
+    minHeight: 120,
   },
-  timerBannerInner: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  recordingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  pulseDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.accent,
-  },
-  recordingText: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.8,
-    color: colors.accent,
-  },
-  timerBannerElapsed: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: colors.text,
-    marginTop: 8,
-    fontVariant: ['tabular-nums'],
-  },
-  timerBannerMeta: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginTop: 4,
-  },
-  timerBannerHint: {
-    fontSize: 15,
-    color: colors.textSecondary,
-    marginBottom: 12,
-  },
-  timerBannerBtn: {
-    marginTop: 8,
-  },
-  sectionWrap: {
-    marginBottom: uiTokens.spacing.xl,
-  },
-  queueScrollContent: {
-    gap: 12,
-    paddingVertical: 4,
-    flexDirection: 'row',
-  },
-  queueCardWrap: {
-    minWidth: 180,
-  },
-  queueCardContent: {
-    padding: uiTokens.spacing.lg,
-  },
-  queueCode: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  queueDept: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginTop: 4,
-  },
-  queueDue: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.accent,
-    marginTop: 8,
-  },
-  shortcutsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
+  timerBannerInner: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 },
+  recordingRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  pulseDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.tint },
+  recordingText: { fontSize: 12, fontWeight: '700', letterSpacing: 0.8, color: colors.tint },
+  timerBannerElapsed: { fontSize: 28, fontWeight: '800', color: colors.text, marginTop: 8, fontVariant: ['tabular-nums'] },
+  timerBannerMeta: { fontSize: 13, color: colors.textSecondary, marginTop: 4 },
+  timerBannerHint: { fontSize: 15, color: colors.textSecondary, marginBottom: 12 },
+  timerBannerBtn: { marginTop: 8 },
+  sectionWrap: { marginBottom: uiTokens.spacing.xl },
+  queueScrollContent: { gap: 12, paddingVertical: 4, flexDirection: 'row' },
+  queueCardWrap: { minWidth: 160 },
+  queueCardContent: { padding: uiTokens.spacing.lg },
+  queueCode: { fontSize: 14, fontWeight: '700', color: colors.text, fontFamily: 'monospace' },
+  queueDept: { fontSize: 12, color: colors.textSecondary, marginTop: 4 },
+  queueDue: { fontSize: 11, fontWeight: '600', color: colors.tint, marginTop: 8 },
+  shortcutsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   shortcutCell: {
     flex: 1,
     minWidth: 140,
@@ -446,7 +340,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     paddingHorizontal: 8,
-    borderRadius: 20,
+    borderRadius: 14,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
@@ -454,52 +348,14 @@ const styles = StyleSheet.create({
   shortcutIcon: {
     width: 36,
     height: 36,
-    borderRadius: 12,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
   },
-  shortcutLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  taskItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: uiTokens.spacing.md,
-  },
-  taskTitle: {
-    flex: 1,
-    fontSize: uiTokens.text.bodyLg,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  taskMeta: {
-    fontSize: uiTokens.text.caption,
-    color: colors.textSecondary,
-    fontWeight: '600',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  errorTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.error,
-    marginBottom: 12,
-  },
-  errorText: {
-    fontSize: uiTokens.text.body,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  emptyText: {
-    fontSize: uiTokens.text.body,
-    color: colors.textSecondary,
-  },
+  shortcutLabel: { fontSize: 12, fontWeight: '600', color: colors.text },
+  errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
+  errorTitle: { fontSize: 20, fontWeight: '700', color: colors.danger, marginBottom: 12 },
+  errorText: { fontSize: uiTokens.text.body, color: colors.textSecondary, textAlign: 'center' },
+  emptyText: { fontSize: uiTokens.text.body, color: colors.textSecondary },
 });

@@ -89,12 +89,12 @@ export function BrandSpinner({ size = 'large', fullScreen = false }: BrandSpinne
 
       {/* Outer spinning gradient ring */}
       <Animated.View style={[styles.ringContainer, { width: ringSize, height: ringSize, transform: [{ rotate: spin }] }]}>
-        <View style={[styles.ring, { width: ringSize, height: ringSize, borderRadius: ringSize / 2, borderTopColor: colors.cyan }]} />
+        <View style={[styles.ring, { width: ringSize, height: ringSize, borderRadius: ringSize / 2, borderTopColor: colors.accent }]} />
       </Animated.View>
 
       {/* Inner reverse spinning ring */}
       <Animated.View style={[styles.ringContainer, { width: innerRingSize, height: innerRingSize, transform: [{ rotate: reverseSpin }] }]}>
-        <View style={[styles.ring, { width: innerRingSize, height: innerRingSize, borderRadius: innerRingSize / 2, borderBottomColor: '#24E1B1', borderLeftColor: '#24E1B1', opacity: 0.8 }]} />
+        <View style={[styles.ring, { width: innerRingSize, height: innerRingSize, borderRadius: innerRingSize / 2, borderBottomColor: colors.cyan, borderLeftColor: colors.cyan, opacity: 0.8 }]} />
       </Animated.View>
 
       {/* Center 'C' */}
@@ -124,8 +124,8 @@ const styles = StyleSheet.create({
   glow: {
     position: 'absolute',
     borderRadius: 999,
-    backgroundColor: colors.cyan,
-    opacity: 0.15,
+    backgroundColor: colors.accent,
+    opacity: 0.12,
     filter: [{ blur: '20px' }] as any, // Works on web
   },
   ringContainer: {
@@ -141,9 +141,6 @@ const styles = StyleSheet.create({
   centerLetter: {
     position: 'absolute',
     fontWeight: '900',
-    color: colors.cyan,
-    textShadowColor: 'rgba(0, 240, 255, 0.5)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
+    color: colors.accent,
   }
 });

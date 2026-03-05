@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   signInButtonText: {
-    color: colors.text,
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },

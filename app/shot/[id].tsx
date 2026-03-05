@@ -159,7 +159,7 @@ export default function ShotDetailScreen() {
                 onPress={() => handleStatusUpdate('In Progress')}
               >
                 <LinearGradient
-                  colors={[colors.accent, colors.accentSecondary]}
+                  colors={[colors.accent, '#FDBA74']}
                   style={styles.actionButtonGradient}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}

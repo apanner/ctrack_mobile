@@ -207,8 +207,11 @@ export default function WorkScreen() {
 
   return (
     <ScreenContainer>
-      <View style={[styles.header, { paddingHorizontal: spacing.lg }]}>
-        <Text style={styles.headerTitle}>Work</Text>
+      <View style={styles.topBand}>
+        <View style={[styles.header, { paddingHorizontal: spacing.lg }]}>
+          <Text style={styles.headerTitle}>Work</Text>
+          <Text style={styles.headerSub}>Timesheets and tasks</Text>
+        </View>
       </View>
 
       <TabControl
@@ -612,13 +615,25 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    paddingTop: 20,
+    paddingTop: 8,
     paddingBottom: 8,
   },
+  topBand: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(255,255,255,0.06)',
+    marginBottom: uiTokens.spacing.sm,
+  },
   headerTitle: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: 26,
+    fontWeight: '800',
     color: colors.text,
+    letterSpacing: -0.4,
+  },
+  headerSub: {
+    marginTop: 2,
+    fontSize: 13,
+    color: colors.textSecondary,
+    fontWeight: '500',
   },
   scrollView: {
     flex: 1,

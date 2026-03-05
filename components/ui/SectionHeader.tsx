@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
   action: {
     fontSize: uiTokens.text.body,
     fontWeight: '600',
-    color: colors.cyan,
+    color: colors.tint,
   },
 });
 

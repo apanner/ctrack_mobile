@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { QueryClient } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
@@ -93,6 +94,7 @@ export default function RootLayout() {
 
   return (
     <ErrorBoundary>
+      <StatusBar style="light" />
       <SafeAreaProvider>
       <PersistQueryClientProvider
         client={queryClient}
@@ -137,8 +139,8 @@ export default function RootLayout() {
                 options={{ headerShown: false }}
               />
               <Stack.Screen
-                name="shot/[id]"
-                options={{ title: 'Shot Details' }}
+                name="chat"
+                options={{ headerShown: false }}
               />
               <Stack.Screen
                 name="project/[id]"
@@ -159,10 +161,6 @@ export default function RootLayout() {
               <Stack.Screen
                 name="expenses/new"
                 options={{ title: 'New Expense', headerShown: false }}
-              />
-              <Stack.Screen
-                name="chat/[roomId]"
-                options={{ title: 'Chat', headerShown: false }}
               />
               <Stack.Screen
                 name="notifications/index"

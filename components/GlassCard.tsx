@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
-import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../constants/colors';
 import { uiTokens } from '../constants/ui-tokens';
@@ -10,17 +9,16 @@ interface GlassCardProps {
   style?: ViewStyle;
   intensity?: number;
   noPadding?: boolean;
-  /** Optional left border accent (Design H shot cards) */
+  /** Optional left border accent */
   leftBorderColor?: keyof Pick<
     typeof colors,
-    'accent' | 'violet' | 'cyan' | 'blue' | 'green' | 'amber'
+    'accent' | 'violet' | 'cyan' | 'blue' | 'green' | 'amber' | 'red' | 'tint'
   >;
 }
 
 export function GlassCard({
   children,
   style,
-  intensity = 40,
   noPadding = false,
   leftBorderColor,
 }: GlassCardProps) {
@@ -35,53 +33,48 @@ export function GlassCard({
         style,
       ]}
     >
-      <BlurView intensity={intensity} tint="dark" style={styles.blur}>
-        {/* Gradient top highlight (::after style) */}
-        <LinearGradient
-          colors={[
-            'transparent',
-            'rgba(244,114,182,0.12)',
-            'rgba(167,139,250,0.12)',
-            'transparent',
-          ]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.topHighlight}
-        />
+      <LinearGradient
+        colors={[colors.surface, colors.surfaceLight, colors.surface]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradient}
+      >
+        <View style={styles.highlight} />
         <View style={[styles.content, noPadding && styles.noPadding]}>
           {children}
         </View>
-      </BlurView>
+      </LinearGradient>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   wrapper: {
-    borderRadius: 20,
+    borderRadius: 14,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: uiTokens.surface.elevatedShadowOpacity,
-    shadowRadius: uiTokens.surface.elevatedShadowRadius,
-    elevation: 5,
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 4,
   },
   wrapperWithBorder: {
-    borderLeftWidth: 3,
+    borderLeftWidth: 4,
   },
-  blur: {
+  gradient: {
     flex: 1,
     overflow: 'hidden',
   },
-  topHighlight: {
+  highlight: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     height: 1,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     zIndex: 1,
   },
   content: {
